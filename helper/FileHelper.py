@@ -95,7 +95,7 @@ def generateDataFile():
 
 def createTrainFile(classes, directory, name="neon_train"):
     data = []
-    with open("./{}.tsv".format(name), "w", encoding='utf-8') as file:
+    with open(name, "w", encoding='utf-8') as file:
         for index, cl in enumerate(classes):
             with open(os.path.join(directory, "{}.txt".format(cl))) as f:
                 for line in f:
