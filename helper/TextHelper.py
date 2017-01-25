@@ -43,8 +43,6 @@ def nerdIt(params,tt):
     for t in params:
         t['annotations'] = [d for d in data if d['startChar'] >= t['start'] and d['endChar'] <= t['end']]
         print(t)
-        del t['start']
-        del t['end']
 
     db.insert("annotation_python", params)
 
@@ -52,9 +50,10 @@ def parseTweets():
     db.connect("tweets_dataset")
     limit, skip, index = 10, 0, 0
     separator = "==="
-    params = []
+
 
     while True:
+        params = []
         tt = ""
         res = list(db.find("annotated", limit=limit, skip=skip, query={'ontology':'dbpedia', 'type':'normal'}))
         if len(res) > 0:
