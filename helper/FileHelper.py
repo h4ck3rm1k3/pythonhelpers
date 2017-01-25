@@ -5,19 +5,21 @@ db.connect("tweets_dataset")
 categories = ["Science","Attacks", "Politics","Miscellaneous","Arts","Sports","Accidents","Economy"]
 binaries = ["positive","negative"]
 
-def parse(data):
+
+def parse(data, binary=False):
     texts = []
     for t in data:
         text = t['text']
         text = ' '.join([t for t in text.split() if len(t) > 2])
         if len(text) > 0:
-            texts.append(text)
+            clazz = t['category'] if not binary else 'negative' if t['category']=='undefined' else 'positive'
+            texts.append('{}\t{}\t{}'.format(t['tweet_id'],clazz, text))
     return texts
 
-def write(data, folder, file):
+def write(data, folder, file, binary=False):
     create(folder)
     with open("{}/{}".format(folder,file), "w", encoding='utf-8') as f:
-        texts = parse(data)
+        texts = parse(data, binary=binary)
         f.write('\n'.join(texts).strip())
 
 def create(folder, destination="./"):
@@ -27,16 +29,16 @@ def create(folder, destination="./"):
 def generate(type,ontology):
 
     data = db.find("annotated", query={"type":type, "ontology":ontology, "dataset":"event 2012", "category":{"$ne":"undefined"}})
-    write(data=data,folder="train/{}/{}".format(ontology,type), file='positive.txt')
+    write(data=data,folder="train/{}/{}".format(ontology,type), file='positive.txt', binary=True)
 
     data = db.find("annotated", query={"type":type, "ontology":ontology, "dataset":"event 2012", "category":"undefined"})
-    write(data=data, folder="train/{}/{}".format(ontology, type), file='negative.txt')
+    write(data=data, folder="train/{}/{}".format(ontology, type), file='negative.txt', binary=True)
 
     data = db.find("annotated", query={"type":type, "ontology":ontology, "dataset":"fsd", "category":{"$ne":"undefined"}})
-    write(data=data, folder="test/{}/{}".format(ontology, type), file='positive.txt')
+    write(data=data, folder="test/{}/{}".format(ontology, type), file='positive.txt', binary=True)
 
     data = db.find("annotated", query={"type":type, "ontology":ontology, "dataset":"fsd", "category":"undefined"})
-    write(data=data, folder="test/{}/{}".format(ontology, type), file='negative.txt')
+    write(data=data, folder="test/{}/{}".format(ontology, type), file='negative.txt', binary=True)
 
 
 def nbLines(file):
@@ -56,23 +58,13 @@ def buildModelForTrain(config):
 
     #print(sentences)
 
-def generateFolders():
-    create("train")
-    create("test")
-    create("dbpedia", destination="train")
-    create("dbpedia", destination="test")
-    create("yago", destination="train")
-    create("yago", destination="test")
-    create("generic", destination="train/dbpedia")
-    create("specific", destination="train/dbpedia")
-    create("generic", destination="train/yago")
-    create("specific", destination="train/yago")
-    create("generic", destination="test/dbpedia")
-    create("specific", destination="test/dbpedia")
-    create("generic", destination="test/yago")
-    create("specific", destination="test/yago")
-    create("normal", destination="train")
-    create("normal", destination="test")
+
+def generateFileForIds(ids, ontology, type):
+    file = "{}_{}.tsv".format(ontology, type)
+    data = db.find("annotated", query={"tweet_id": {"$in":ids}, 'ontology':ontology, 'type':type})
+    write(data=data,folder='eval',file=file)
+    return 'eval/{}'.format(file)
+
 
 def generateDataFile():
     params = [
@@ -82,8 +74,7 @@ def generateDataFile():
         {'ontology': 'yago', 'type': 'specific', 'name': 'yago_specific'},
         {'ontology': 'dbpedia', 'type': 'normal', 'name': 'dbpedia_normal'},
     ]
-
-
+    categories.append("undefined")
     for cat in categories:
         for config in params:
             config['category'] = cat
@@ -112,4 +103,4 @@ def createTrainFile(classes, directory, name="neon_train"):
 
 
 if __name__ == '__main__':
-    generateDataFile()
+    generateFileForIds(['255923608482881536','255968499887923200'], folder='eval',ontology='dbpedia',type='generic')

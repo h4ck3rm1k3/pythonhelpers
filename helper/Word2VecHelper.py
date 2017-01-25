@@ -13,31 +13,25 @@ def loadModel(name):
     return model
 
 
-def mFile(file):
-    X = []
+def dataFromFile(file):
+    texts, ids, labels = [],[], []
     with open(file, "r") as infile:
         for line in infile:
-            # label, text = line.split("\t")
-            # texts are already tokenized, just split on space
-            # in a real case we would use e.g. spaCy for tokenization
-            # and maybe remove stopwords etc.
-            X.append(TextHelper.tokenize(line))
-    return X
+            id, label, text = line.split("\t")
+            texts.append(TextHelper.tokenize(text))
+            ids.append(id)
+            labels.append(label)
+    return ids,labels, texts
 
 
-def load(folder, X, y,label):
-    train = mFile(folder)
-
-    if len(train) > 0 :
-        y.extend([label for _ in train])
-        X.extend(train)
-    return X, y
-
-def loadData(classes, args):
-    X_train, y_train, X_test, y_test = [], [], [], []
+def loadData(classes, args, type):
+    instances, labels, texts = [], [], []
     for index, category in enumerate(classes):
-        load("train/{}/{}/{}.txt".format(args.ontology,args.type,category),X_train,y_train,category)
-        load("test/{}/{}/{}.txt".format(args.ontology, args.type, category), X_test, y_test, category)
+        folder = "{}/{}/{}/{}.txt".format(type, args.ontology,args.type,category)
+        _instances, _labels, _texts = dataFromFile(folder)
+        instances.extend(_instances)
+        labels.extend(_labels)
+        texts.extend(_texts)
 
-    X_train, y_train, X_test, y_test = np.array(X_train), np.array(y_train),np.array(X_test), np.array(y_test)
-    return X_train, y_train, X_test, y_test
+    instances, labels, texts = np.array(instances), np.array(labels),np.array(texts)
+    return instances, labels, texts

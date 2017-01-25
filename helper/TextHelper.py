@@ -26,7 +26,8 @@ class MySentences(object):
     def __iter__(self):
         for fname in self.files:
             for line in open(fname):
-                yield tokenize(line)
+                _,__,text  = line.split('\t')
+                yield tokenize(text)
 
 
 def correct(text):
@@ -163,9 +164,79 @@ def loadAnnotations():
             db.update("annotation_purge", {"id": l['id']}, {"annotations": annotations})
 
 
+def replacement():
+    from operator import itemgetter
+
+    db.connect("tweets_dataset")
+    limit, skip = 100, 0
+    while True:
+        res = list(db.find("annotation_purge", limit=limit, skip=skip))
+        if not res:
+            break
+        for l in res:
+            text = str(l['text'])
+            _textYG, _textDG , _textYS, _textDS = "", "", "", ""
+            print(text)
+            newlist = sorted(l['annotations'], key=itemgetter('startChar'))
+            index = 0
+
+            for ann in newlist:
+                cType = ann['extractorType'].split(',')[0] if not str(ann['extractorType']).startswith("/") else ann['label']
+                start = ann['startChar'] - l['start']
+                end = start + ann['endChar']-ann['startChar']
+                _textDG +=text[index:start]
+                _textDS +=text[index:start]
+                _textYG +=text[index:start]
+                _textYS +=text[index:start]
+
+                if 'dbpedia' in ann and type(ann['dbpedia']) is list and ann['dbpedia'][0]:
+                    dbpedias = ann['dbpedia']
+                    print(type(dbpedias), dbpedias)
+                    _textDG += " " + dbpedias[len(dbpedias)-1]
+                    _textDS += " " + dbpedias[0]
+                else:
+                    _textDG +=" " +cType
+                    _textDS +=" " + cType
+
+                if 'yago' in ann and type(ann['yago']) is list and ann['yago'][0]:
+                    yagos = ann['yago']
+                    _textYG += " " + yagos[len(yagos)-1]
+                    _textYS += " " + yagos[0]
+
+                else:
+                    _textYG += " " +cType
+                    _textYS += " " +cType
+
+                index = end
+
+            _textYG += " " +text[index:len(text)]
+            _textDG += " " +text[index:len(text)]
+            _textYS += " " +text[index:len(text)]
+            _textDS += " " +text[index:len(text)]
+
+            _textDG = _textDG.strip()
+            _textYG = _textYG.strip()
+            _textYS = _textYS.strip()
+            _textDS = _textDS.strip()
+
+            print(_textYG)
+            print(_textYS)
+            print(_textDG)
+            print(_textDS)
+
+            l['dbpedia_generic'] = _textDG
+            l['dbpedia_specific'] = _textDS
+            l['yago_generic'] = _textYG
+            l['yago_specific'] = _textYS
+            db.update("annotation_purge", {"id":l['id']}, l)
+        break
+
+
+
+
 if __name__ == '__main__':
     #parseTweets()
     #dbpedias, yagos = dbpediaIt("http://dbpedia.org/resource/Robert_Lefkowitz")
     #print(dbpedias, yagos)
-    clean()
-    loadAnnotations()
+    #clean()
+    replacement()
