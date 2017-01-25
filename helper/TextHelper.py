@@ -42,6 +42,7 @@ def nerdIt(params,tt):
 
     for t in params:
         t['annotations'] = [d for d in data if d['startChar'] >= t['start'] and d['endChar'] <= t['end']]
+        print(t)
         del t['start']
         del t['end']
 
