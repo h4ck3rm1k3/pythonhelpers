@@ -42,8 +42,8 @@ def nerdIt(params,tt):
 
     for t in params:
         t['annotations'] = [d for d in data if d['startChar'] >= t['start'] and d['endChar'] <= t['end']]
-        print(t)
-
+        #print(t)
+    print("inserting {} annotated tweets".format(len(params)))
     db.insert("annotation_python", params)
 
 def parseTweets():
