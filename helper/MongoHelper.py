@@ -76,6 +76,11 @@ def modifyAnnotation(tweet_id):
     """
 
 
+def update(collection, condition, value):
+    collection = db[collection]
+    result =collection.update_many(condition, {"$set":value})
+    print("match", ":", result.matched_count, "modified", " : ", result.modified_count)
+
 def modifyTweets():
     data = db.tweet.find();
     for tweet in data:

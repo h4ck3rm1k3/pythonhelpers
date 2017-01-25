@@ -7,6 +7,7 @@ from autocorrect import spell
 import re
 from helper import MongoHelper as db
 from helper.nerd import  NERD
+from helper import Utils
 tknzr = TweetTokenizer()
 
 stop = stopwords.words('english') + list(string.punctuation)
@@ -51,7 +52,6 @@ def parseTweets():
     limit, skip, index = 400, 0, 0
     separator = "==="
 
-
     while True:
         params = []
         tt = ""
@@ -69,6 +69,103 @@ def parseTweets():
         nerdIt(params,tt)
 
 
+def dbpediaIt(uri):
+    from SPARQLWrapper import SPARQLWrapper, JSON
+    yago = 'http://dbpedia.org/class/yago/'
+    dbpedia = 'http://dbpedia.org/ontology/'
+    sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+    query = Utils.dqueryPattern.replace("URI", uri)
+    sparql.setQuery(query)
+
+    sparql.setReturnFormat(JSON)
+    results = sparql.query().convert()
+
+    dbpedias , yagos = {}, {}
+
+    for result in results["results"]["bindings"]:
+        type = str(result['type']['value'])
+        group = str(result['group']['value'])
+        group = Utils.removeNumeric(group)
+        type = Utils.removeNumeric(type)
+        #group = group.replace(yago, '').replace('>', ' ')
+        group = [g.split('/')[len(g.split('/'))-1] for g in group.split('>') if g.startswith(dbpedia) or g.startswith(yago)]
+        group = Utils.remove_duplicates(group)
+        #group = list(set([g for g in group if g not in Utils.ignored]))
+
+        if type.startswith(yago) and not 'Wiki' in type:
+            type = type.replace(yago,'')
+            yagos[type] = group
+
+        if type.startswith(dbpedia):
+            type = type.replace(dbpedia, '')
+            #group = group.replace(dbpedia, '')
+            dbpedias[type] = group
+
+    if yagos:
+        yagos = Utils.filter(yagos)
+
+    if dbpedias:
+        dbpedias = Utils.filter(dbpedias)
+
+    return dbpedias,yagos
+
+def clean():
+    db.connect("tweets_dataset")
+    limit, skip = 400, 0
+
+
+    while True:
+        res = list(db.find("annotation_python", limit=limit, skip=skip))
+        if not res:
+            break
+        skip+=limit
+        for r in res:
+            annoations = r['annotations']
+            if not annoations:
+                continue
+            ann = []
+            found = False
+            for i, a in enumerate(annoations):
+                for j, b in enumerate(annoations):
+                    if j==i:
+                        continue
+                    if (a['startChar'] >= b['startChar'] and a['endChar'] <= b['endChar']):
+                        found = True
+                        break
+                if not found:
+                    ann.append(a)
+                found = False
+            r['annotations'] = ann
+        db.insert("annotation_purge", res)
+
+
+
+def loadAnnotations():
+    db.connect("tweets_dataset")
+    limit, skip = 100, 0
+    while True :
+        res = list(db.find("annotation_purge", limit=limit,skip=skip))
+        if not res:
+            break
+        for l in res:
+            print(l['text'])
+            annotations = l['annotations']
+            for annotation in annotations:
+                try:
+                    uri = annotation['uri'] if 'dbpedia' in annotation['uri'] else 'http://dbpedia.org/resource/{}'.format(str(annotation['label']).replace(' ', '_'))
+                    dbpedias, yagos = dbpediaIt(uri)
+                    print("DBP", dbpedias,yagos)
+                    annotation['dbpedia'] = dbpedias
+                    annotation['yago'] = yagos
+                except Exception as err:
+                    print('Handling run-time error:', err)
+                    print(annotation['label'])
+            db.update("annotation_purge", {"id": l['id']}, {"annotations": annotations})
+
 
 if __name__ == '__main__':
-    parseTweets()
+    #parseTweets()
+    #dbpedias, yagos = dbpediaIt("http://dbpedia.org/resource/Robert_Lefkowitz")
+    #print(dbpedias, yagos)
+    clean()
+    loadAnnotations()
