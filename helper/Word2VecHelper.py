@@ -1,6 +1,6 @@
 import gensim
 from helper import TextHelper
-
+import numpy as np
 
 def createModel(files, name, args={"job":10, "size" :300, "min_count" : 2, "window":2}):
     sentences = TextHelper.MySentences(files)  # a memory-friendly iterator

@@ -98,11 +98,17 @@ def createTrainFile(classes, directory, name="neon_train"):
     with open(name, "w", encoding='utf-8') as file:
         for index, cl in enumerate(classes):
             with open(os.path.join(directory, "{}.txt".format(cl))) as f:
+                position = 0
                 for line in f:
+                    line = ' '.join(line.split('\t'))
                     line = TextHelper.tokenize(line)
-                    if len(line) <=0:
+                    if len(line) <=1:
                         continue
-                    file.write("{}\t{}\n".format(index,' '.join(line)))
+                    if position == 0:
+                        file.write("{}\t{}".format(index,' '.join(line)))
+                    else:
+                        file.write("\n{}\t{}".format(index, ' '.join(line)))
+                    position+=1
 
 
 if __name__ == '__main__':
