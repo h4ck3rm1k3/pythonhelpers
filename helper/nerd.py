@@ -55,11 +55,10 @@ class NERD(object):
                           self._headers
                           )
         response = self.http.getresponse()
-        print(response.status/100)
         if int(response.status / 100) != 2:
             raise Exception("%s %s" % (response.status, response.reason))
         json = response.read()
-        _debug(response, json)
+        #_debug(response, json)
         data = json_loads(json.decode())
         id_document = data["idDocument"]
 
@@ -76,7 +75,7 @@ class NERD(object):
         if int(response.status / 100) != 2:
             raise Exception("%s %s" % (response.status, response.reason))
         json = response.read()
-        _debug(response, json)
+        #_debug(response, json)
         data = json_loads(json.decode())
         id_annotation = data["idAnnotation"]
 
@@ -88,7 +87,7 @@ class NERD(object):
         if int(response.status / 100) != 2:
             raise Exception("%s %s" % (response.status, response.reason))
         json = response.read()
-        _debug(response, json)
+        #_debug(response, json)
         data = json_loads(json.decode())
         return data
 

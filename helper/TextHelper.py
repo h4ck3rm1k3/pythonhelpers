@@ -48,7 +48,7 @@ def nerdIt(params,tt):
 
 def parseTweets():
     db.connect("tweets_dataset")
-    limit, skip, index = 10, 0, 0
+    limit, skip, index = 400, 0, 0
     separator = "==="
 
 
