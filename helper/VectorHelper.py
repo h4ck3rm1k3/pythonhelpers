@@ -11,6 +11,10 @@ class MeanEmbeddingVectorizer(object):
     def fit(self, X, y):
         return self
 
+    def get_params(self, deep=True):
+        # suppose this estimator has parameters "alpha" and "recursive"
+        return {"word2vec": self.word2vec}
+
     def transform(self, X):
         return np.array([
                             np.mean([self.word2vec[w] for w in words if w in self.word2vec]
@@ -26,6 +30,10 @@ class TfidfEmbeddingVectorizer(object):
         self.word2vec = word2vec
         self.word2weight = None
         self.dim = len(next(iter(word2vec.values())))
+
+    def get_params(self, deep=True):
+        # suppose this estimator has parameters "alpha" and "recursive"
+        return {"word2vec": self.word2vec}
 
     def fit(self, X, y):
         tfidf = TfidfVectorizer(analyzer=lambda x: x)

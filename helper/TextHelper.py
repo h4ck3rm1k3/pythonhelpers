@@ -15,7 +15,7 @@ porter = nltk.PorterStemmer()
 
 
 def tokenize(text):
-    tokens = [porter.stem(token) for token in tknzr.tokenize(text.lower()) if token not in stop and len(token) > 2]
+    tokens = [token for token in tknzr.tokenize(text.lower()) if token not in stop and len(token) > 2]
     return tokens
 
 
@@ -173,6 +173,7 @@ def replacement():
         res = list(db.find("annotation_purge", limit=limit, skip=skip))
         if not res:
             break
+        skip+=limit
         for l in res:
             text = str(l['text'])
             _textYG, _textDG , _textYS, _textDS = "", "", "", ""
@@ -223,13 +224,13 @@ def replacement():
             print(_textYS)
             print(_textDG)
             print(_textDS)
+            d = {}
 
-            l['dbpedia_generic'] = _textDG
-            l['dbpedia_specific'] = _textDS
-            l['yago_generic'] = _textYG
-            l['yago_specific'] = _textYS
-            db.update("annotation_purge", {"id":l['id']}, l)
-        break
+            d['dbpedia_generic'] = _textDG
+            d['dbpedia_specific'] = _textDS
+            d['yago_generic'] = _textYG
+            d['yago_specific'] = _textYS
+            db.update("annotation_purge", {"id":l['id']}, d)
 
 
 
