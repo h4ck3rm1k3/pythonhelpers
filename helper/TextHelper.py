@@ -3,7 +3,6 @@ from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 import string
 import nltk
-from autocorrect import spell
 import re
 from helper import MongoHelper as db
 from helper.nerd import  NERD
@@ -29,13 +28,6 @@ class MySentences(object):
                 _,__,text  = line.split('\t')
                 yield tokenize(text)
 
-
-def correct(text):
-    text = re.sub(r'(.)\1+', r'\1', text)
-    res = []
-    for t in text.split(" "):
-        res.append(spell(t))
-    return ' '.join(res)
 
 def nerdIt(params,tt):
     timeout = 10
