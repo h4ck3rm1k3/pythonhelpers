@@ -2,12 +2,12 @@ import gensim
 from helper import TextHelper
 import numpy as np
 
-def createModel(files, name, merge=True,  args={"job":10, "size" :300, "min_count" : 2, "window":2}):
+def createModel(files, name, merge=0,  args={"job":10, "size" :300, "min_count" : 2, "window":2}):
     #load the google model
     #model = loadModel("GoogleNews-vectors-negative300")
     sentences = TextHelper.MySentences(files)  # a memory-friendly iterator
     #model.train(sentences, total_words=sum(len(i) for i in sentences))
-    name = "{}_{}.bin".format(name,'merged' if merge else 'simple')
+    name = "{}_{}.bin".format(name,'merged' if merge > 0 else 'simple')
     model = gensim.models.Word2Vec(sentences, workers=args["job"], size=args["size"], min_count=args["min_count"], window=args["window"])
     if merge:
         model.intersect_word2vec_format('GoogleNews-vectors-negative300.bin',
@@ -17,8 +17,8 @@ def createModel(files, name, merge=True,  args={"job":10, "size" :300, "min_coun
     model.save_word2vec_format(name, binary=True)
     return model
 
-def loadModel(name, merge=False):
-    name = "{}_{}.bin".format(name, 'merged' if merge else 'simple')
+def loadModel(name, merge=0):
+    name = "{}_{}.bin".format(name, 'merged' if merge>0 else 'simple')
     model = gensim.models.Word2Vec.load_word2vec_format(name,binary=True, unicode_errors='ignore')
     return model
 
