@@ -240,4 +240,5 @@ if __name__ == '__main__':
     #dbpedias, yagos = dbpediaIt("http://dbpedia.org/resource/Robert_Lefkowitz")
     #print(dbpedias, yagos)
     #clean()
+    loadAnnotations()
     replacement()
