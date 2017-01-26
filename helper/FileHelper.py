@@ -3,6 +3,7 @@ from helper import TextHelper
 import os
 db.connect("tweets_dataset")
 categories = ["Science","Attacks", "Politics","Miscellaneous","Arts","Sports","Accidents","Economy"]
+all = ["Science","Attacks", "Politics","Miscellaneous","Arts","Sports","Accidents","Economy", "undefined"]
 binaries = ["positive","negative"]
 
 
@@ -10,10 +11,11 @@ def parse(data, binary=False):
     texts = []
     for t in data:
         text = t['text']
-        text = ' '.join([t for t in text.split() if len(t) > 2])
-        if len(text) > 0:
+        text = [str(t).strip() for t in text.split() if len(t) > 2]
+        if len(text) > 1:
             clazz = t['category'] if not binary else 'negative' if t['category']=='undefined' else 'positive'
-            texts.append('{}\t{}\t{}'.format(t['tweet_id'],clazz, text))
+            texts.append('{}\t{}\t{}'.format(t['tweet_id'],clazz, ' '.join(text)))
+    #texts.append('\n')
     return texts
 
 def write(data, folder, file, binary=False):
@@ -89,17 +91,12 @@ def createTrainFile(classes, directory, name="neon_train"):
     with open(name, "w", encoding='utf-8') as file:
         for index, cl in enumerate(classes):
             with open(os.path.join(directory, "{}.txt".format(cl))) as f:
-                position = 0
                 for line in f:
                     line = ' '.join(line.split('\t'))
                     line = TextHelper.tokenize(line)
                     if len(line) <=1:
                         continue
-                    if position == 0:
-                        file.write("{}\t{}".format(index,' '.join(line)))
-                    else:
-                        file.write("\n{}\t{}".format(index, ' '.join(line)))
-                    position+=1
+                    file.write("{}\t{}\n".format(index, ' '.join(line)))
 
 
 if __name__ == '__main__':
