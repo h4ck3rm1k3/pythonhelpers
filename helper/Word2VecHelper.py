@@ -9,7 +9,7 @@ def createModel(files, name, merge=0,  args={"job":10, "size" :300, "min_count" 
     #model.train(sentences, total_words=sum(len(i) for i in sentences))
     name = "{}_{}.bin".format(name,'merged' if merge > 0 else 'simple')
     model = gensim.models.Word2Vec(sentences, workers=args["job"], size=args["size"], min_count=args["min_count"], window=args["window"])
-    if merge:
+    if merge > 0:
         model.intersect_word2vec_format('GoogleNews-vectors-negative300.bin',
                                 lockf=1.0,
                                 binary=True)
