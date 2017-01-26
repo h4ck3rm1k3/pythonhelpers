@@ -148,6 +148,7 @@ def loadAnnotations():
         res = list(db.find("annotation_purge", limit=limit,skip=skip))
         if not res:
             break
+        skip+=limit
         for l in res:
             print(l['text'])
             annotations = l['annotations']
@@ -183,7 +184,7 @@ def replacement():
 
             for ann in newlist:
                 cType = ann['extractorType'].split(',')[0] if not str(ann['extractorType']).startswith("/") else ann['label']
-                start = ann['startChar'] - l['start']
+                start = ann['startChar'] - ann['start']
                 end = start + ann['endChar']-ann['startChar']
                 _textDG +=text[index:start]
                 _textDS +=text[index:start]
@@ -192,7 +193,6 @@ def replacement():
 
                 if 'dbpedia' in ann and type(ann['dbpedia']) is list and ann['dbpedia'][0]:
                     dbpedias = ann['dbpedia']
-                    print(type(dbpedias), dbpedias)
                     _textDG += " " + dbpedias[len(dbpedias)-1]
                     _textDS += " " + dbpedias[0]
                 else:
