@@ -42,7 +42,7 @@ def parseTweets():
 
         skip+=limit
         nerdIt(params,tt)
-        break
+        #break
 
 def cleanAnnotation(r):
     annoations = r['annotations']
