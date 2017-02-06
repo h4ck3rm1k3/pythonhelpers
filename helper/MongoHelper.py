@@ -224,13 +224,12 @@ def addTwetId():
         i += 1000
     print('Done')
 
-def aggregateDate(collection):
-    pipeline = [ { "$group" : { "_id" : {"day" : { "$dayOfYear" : "$date"}},"data" : { "$addToSet" :{'text':"$text", 'id': '$id', 'annotations':'$annotations'}}}},{ "$sort" : { "_id.day" : 1}}]
+def aggregateDate(collection, day):
+    pipeline = [ { "$group" : { "_id" : {"day" : { "$dayOfYear" : "$date"}},"data" : { "$addToSet" :{'text':"$text", 'id': '$id', 'annotations':'$annotations'}}}},{ "$sort" : { "_id.day" : 1}}, {"$match" : {"_id.day" : day}}]
     return list(db[collection].aggregate(pipeline,allowDiskUse =True))
 
-def aggregate(collection, hour):
-    collection = db[collection]
-    [{"$group": {"_id": {"hour": {"$hour": "$date"}, "minute": {"$minute": "$date"}, "month": {}},
-                 "count": {"$sum": 1}, "data": {"$addToSet": "$_id"}}},
-     {"$match": {"$and": [{"_id.hour": hour}, {"_id.minute": {"$gte": 0, "$lt": 5}}]}},
-     {"$sort": {"_id.hour": 1, "_id.minute": 1}}]
+def intervales(collection):
+    pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}}},
+                {"$sort": {"_id.day": 1}}]
+    return [l['_id']['day'] for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
+
