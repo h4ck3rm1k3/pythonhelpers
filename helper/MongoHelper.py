@@ -24,18 +24,19 @@ def connect(databaseName):
 def insert(collection, newData):
     data = db[collection]
     if type(newData) is list:
-        data.insert_many(newData)
+        res = data.insert_many(newData)
     else:
-        data.insert_one(newData)
+        res = data.insert_one(newData)
+    return res
 
 
 def find(collection, limit=0, skip=0, query={}):
     data = db[collection]
     results = None
     if (limit == 0):
-        results =  data.find(query).sort('_id', pymongo.ASCENDING)
+        results =  data.find(query).sort("_id", pymongo.ASCENDING)
     else:
-        results = data.find(query).sort('_id', pymongo.ASCENDING).limit(limit).skip(skip)
+        results = data.find(query).sort("_id", pymongo.ASCENDING).limit(limit).skip(skip)
     return list(results)
 
 
@@ -222,3 +223,14 @@ def addTwetId():
             print("match", ":", result.matched_count, "modified", " : ", result.modified_count)
         i += 1000
     print('Done')
+
+def aggregateDate(collection):
+    pipeline = [ { "$group" : { "_id" : {"day" : { "$dayOfYear" : "$date"}},"data" : { "$addToSet" :{'text':"$text", 'id': '$id', 'annotations':'$annotations'}}}},{ "$sort" : { "_id.day" : 1}}]
+    return list(db[collection].aggregate(pipeline,allowDiskUse =True))
+
+def aggregate(collection, hour):
+    collection = db[collection]
+    [{"$group": {"_id": {"hour": {"$hour": "$date"}, "minute": {"$minute": "$date"}, "month": {}},
+                 "count": {"$sum": 1}, "data": {"$addToSet": "$_id"}}},
+     {"$match": {"$and": [{"_id.hour": hour}, {"_id.minute": {"$gte": 0, "$lt": 5}}]}},
+     {"$sort": {"_id.hour": 1, "_id.minute": 1}}]

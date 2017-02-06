@@ -22,6 +22,11 @@ def loadModel(name, merge=0):
     model = gensim.models.Word2Vec.load_word2vec_format(name,binary=True, unicode_errors='ignore')
     return model
 
+def loadModel(name,):
+    model = gensim.models.Word2Vec.load_word2vec_format(name,binary=True, unicode_errors='ignore')
+    return model
+
+
 
 
 def dataFromFile(file):
