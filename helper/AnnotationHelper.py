@@ -3,6 +3,9 @@ from helper import MongoHelper as db
 from helper.nerd import  NERD
 from helper import Utils, TextHelper
 from nltk import ngrams
+from helper.TweetPreprocessor import TweetPreprocessor
+
+t = TweetPreprocessor()
 
 def nerdIt(params,tt):
     timeout = 10
@@ -29,6 +32,7 @@ def parseTweets():
         if len(res) > 0:
             for r in res:
                 text = str(r['original']).strip()
+                text = t.preprocess(text)
                 params.append(
                     {"start": index, "end": len(text) + index + len(separator), 'text': text, 'annotations': [], 'id' : r['tweet_id'], 'date' : r['date'], 'dataset' : r['dataset']})
                 index += len(text) + len(separator)
@@ -38,7 +42,7 @@ def parseTweets():
 
         skip+=limit
         nerdIt(params,tt)
-        #break
+        break
 
 def cleanAnnotation(r):
     annoations = r['annotations']
@@ -154,6 +158,7 @@ def loadAnnotations():
 
 def format(tweet):
     text = str(tweet['text']).replace("'s", "")
+    text = t.preprocess(text)
     text = ' '.join(TextHelper.tokenize(text))
     #text = ' '.join(text.split())
     _text =  ""
@@ -162,7 +167,7 @@ def format(tweet):
     mDicts= []
 
     for ann in newlist:
-        ann['label'] = ann['label'].lower()
+        ann['label'] = t.preprocess(ann['label'].lower())
         mDict = {}
         try:
             start =  text.index(ann['label'], index) if ann['label'] in text else -1
@@ -182,7 +187,7 @@ def format(tweet):
 
     for a in mDicts:
         p = []
-        p.extend(text[0:a['start']].split()[-32:])
+        p.extend(text[0:a['start']].split()[-2:])
         p.append(a['label'])
         p.extend(text[a['end']:].split()[0:2])
         res = ngrams(p, 2)
@@ -193,8 +198,6 @@ def format(tweet):
 
 
 def replacement():
-
-
     db.connect("tweets_dataset")
     limit, skip = 100, 0
     while True:
