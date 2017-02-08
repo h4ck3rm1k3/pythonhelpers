@@ -16,7 +16,7 @@ def nerdIt(params,tt):
         t['annotations'] = [d for d in data if d['startChar'] >= t['start'] and d['endChar'] <= t['end']]
         cleanAnnotation(t)
         #print(t)
-    print(params)
+    print("Annotated", len(params))
     db.insert("annotation_unsupervised", params)
 
 def parseTweets():
@@ -28,13 +28,13 @@ def parseTweets():
         params = []
         tt = ""
         index = 0
-        res = list(db.find("tweets", limit=limit, skip=skip, query={'date' : {"$exists":True}}))
+        res = list(db.find("tweets", limit=limit, skip=skip, query={'event_id' : {"$exists":False}}))
         if len(res) > 0:
             for r in res:
                 text = str(r['text']).strip()
                 text = t.preprocess(text)
                 params.append(
-                    {"start": index, "end": len(text) + index + len(separator), 'text': text, 'annotations': [], 'id' : r['tweet_id'], 'date' : r['date'], 'dataset' : 'event 2012', 'event_id' : r['event_id']})
+                    {"start": index, "end": len(text) + index + len(separator), 'text': text, 'annotations': [], 'id' : r['tweet_id'], 'date' : r['date'], 'dataset' : 'event 2012', 'event_id' : r['event_id'] if 'event_id' in r else -1})
                 index += len(text) + len(separator)
                 tt += text + separator
         else:
