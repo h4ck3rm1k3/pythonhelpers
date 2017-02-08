@@ -11,3 +11,7 @@ def enableLog():
     ch.setFormatter(formatter)
     log.addHandler(ch)
     return log
+
+def disableLog(log):
+    log = logging.getLogger()
+    log.setLevel(logging.ERROR)

@@ -224,6 +224,13 @@ def addTwetId():
         i += 1000
     print('Done')
 
+def getEventCategory(collection, ids):
+    pipeline  = [
+{   "$match" : {"id" : {"$in":ids}}},
+{   "$group" : { "_id" : {"event":"$event_text"}}}
+]
+    return list(db[collection].aggregate(pipeline, allowDiskUse=True))
+
 def aggregateDate(collection, day):
     pipeline = [ { "$group" : { "_id" : {"day" : { "$dayOfYear" : "$date"}},"data" : { "$addToSet" :{'text':"$text", 'id': '$id', 'annotations':'$annotations'}}}},{ "$sort" : { "_id.day" : 1}}, {"$match" : {"_id.day" : day}}]
     return list(db[collection].aggregate(pipeline,allowDiskUse =True))

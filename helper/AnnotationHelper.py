@@ -20,7 +20,7 @@ def nerdIt(params,tt):
     db.insert("annotation_unsupervised", params)
 
 def parseTweets():
-    db.connect("tweets_dataset")
+    db.connect("event_2012")
     limit, skip, index = 400, 0, 0
     separator = "==="
 
@@ -28,13 +28,13 @@ def parseTweets():
         params = []
         tt = ""
         index = 0
-        res = list(db.find("annotated", limit=limit, skip=skip, query={'ontology':'dbpedia', 'type':'generic', 'date' : {"$exists":True}}))
+        res = list(db.find("tweets", limit=limit, skip=skip, query={'date' : {"$exists":True}}))
         if len(res) > 0:
             for r in res:
-                text = str(r['original']).strip()
+                text = str(r['text']).strip()
                 text = t.preprocess(text)
                 params.append(
-                    {"start": index, "end": len(text) + index + len(separator), 'text': text, 'annotations': [], 'id' : r['tweet_id'], 'date' : r['date'], 'dataset' : r['dataset']})
+                    {"start": index, "end": len(text) + index + len(separator), 'text': text, 'annotations': [], 'id' : r['tweet_id'], 'date' : r['date'], 'dataset' : 'event 2012', 'event_id' : r['event_id']})
                 index += len(text) + len(separator)
                 tt += text + separator
         else:
@@ -157,9 +157,11 @@ def loadAnnotations():
             db.update("annotation_purge", {"id": l['id']}, {"annotations": annotations})
 
 def format(tweet):
-    text = str(tweet['text']).replace("'s", "")
+    text = str(tweet['text']).lower().replace("'s", "")
     text = t.preprocess(text)
     text = ' '.join(TextHelper.tokenize(text))
+    #return [{'edges' : [t for t in ngrams(text.split(), 2)]}]
+
     #text = ' '.join(text.split())
     _text =  ""
     newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
@@ -167,7 +169,7 @@ def format(tweet):
     mDicts= []
 
     for ann in newlist:
-        ann['label'] = t.preprocess(ann['label'].lower())
+        ann['label'] = t.preprocess(ann['label'].lower()).replace("'s", "")
         mDict = {}
         try:
             start =  text.index(ann['label'], index) if ann['label'] in text else -1
@@ -179,23 +181,36 @@ def format(tweet):
             mDict ['label'] = ann['label']
             mDict['start'] = start
             mDict['end'] = end
-        else:
-            _text+= ann['label']
+
         if mDict:
             mDicts.append(mDict)
         index = end
 
     for a in mDicts:
-        p = []
+        """p = []
         p.extend(text[0:a['start']].split()[-2:])
         p.append(a['label'])
         p.extend(text[a['end']:].split()[0:2])
         res = ngrams(p, 2)
-        a['edges'] =  [bi for bi in res]
+        """
+        #cEntity = ' '.join(text[0:a['start']].split()[-1:]) + "_" + a['label'] + "_" + ' '.join(text[a['end']:].split()[0:1])
+        #a['edges'] =  [(' '.join(text[0:a['start']].split()[-3:-1]), cEntity),(cEntity, ' '.join(text[a['end']:].split()[1:3]))] #'{} {} {}'.format(' '.join(text[0:a['start']].split()[-2:]), a['label'], ' '.join(text[a['end']:].split()[0:2]))
+        a['edges'] =  [(' '.join(text[0:a['start']].split()[-1:]), a['label']),(a['label'], ' '.join(text[a['end']:].split()[0:1]))] #'{} {} {}'.format(' '.join(text[0:a['start']].split()[-2:]), a['label'], ' '.join(text[a['end']:].split()[0:2]))
+
+    #print(text)
+    #print([p['edges'] for p in mDicts])
 
     return mDicts
 
+def getNodes(text, n=2):
+    text = t.preprocess(text)
+    tokens = text.split()
+    #tokens = TextHelper.tokenize(text)
+    ng = ngrams(tokens,n)
+    return [t for t in ngrams(tokens,n)]
 
+def groundTruthEvent(ids):
+    return [ev['_id']['event'] for ev in db.getEventCategory('annotation_unsupervised',ids)]
 
 def replacement():
     db.connect("tweets_dataset")

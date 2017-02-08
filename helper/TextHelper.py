@@ -10,6 +10,8 @@ tknzr = TweetTokenizer()
 stop = stopwords.words('english') + list(string.punctuation)
 porter = nltk.PorterStemmer()
 
+def isStopWord(word):
+    return word.lower() in stop
 
 def tokenize(text):
     tokens = [token for token in tknzr.tokenize(text.lower()) if token not in stop and len(token) > 2]
