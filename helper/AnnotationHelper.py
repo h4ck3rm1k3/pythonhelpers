@@ -21,7 +21,7 @@ def nerdIt(params,tt):
 
 def parseTweets():
     db.connect("event_2012")
-    limit, skip, index = 400, 200400, 0
+    limit, skip, index = 400, 400000, 0
     separator = "==="
 
     while True:
