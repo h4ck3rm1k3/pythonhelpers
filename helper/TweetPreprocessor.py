@@ -72,7 +72,12 @@ class TweetPreprocessor(object):
         text = re_sub(r"<3", self.SMILE)
         #text = re_sub(r"[-+]?[.\d]*[\d]+[:,.\d]*", self.NUMBER)
         text = re_sub(r"#", '')
+        text = re_sub(r"@", '')
         text = re_sub(r"/", '')
+        text = re_sub(r"'s", '')
+        text = re_sub(r"'m", '')
+        text = re_sub(r"'nt", '')
+        text = re_sub(r"'@youtube", '')
         text = re_sub(r"([!?.]){2,}", r"\1 " + self.SMILE)
         #text = re_sub(r"\b(\S*?)(.)\2{2,}\b", r"\1\2 " + self.ELONG)
 

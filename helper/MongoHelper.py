@@ -227,7 +227,7 @@ def addTwetId():
 def getEventCategory(collection, ids):
     pipeline  = [
 {   "$match" : {"id" : {"$in":ids}}},
-{   "$group" : { "_id" : {"event":"$event_text"}}}
+{   "$group" : { "_id" : {"event":"$event_id"},"data" : { "$addToSet" :{'id': '$id'}}}}
 ]
     return list(db[collection].aggregate(pipeline, allowDiskUse=True))
 
@@ -240,3 +240,13 @@ def intervales(collection):
                 {"$sort": {"_id.day": 1}}]
     return [l['_id']['day'] for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
 
+def stat(collection):
+    #pipeline = [ { "$group" : { "_id" : {"event_id" : "$event_id","day" : { "$dayOfYear" : "$date"}},
+    #"data" : { "$addToSet" :{'id':"$id"}}}}]
+    pipeline = [ { "$group" : { "_id" : {"event_id" : "$event_id"},
+    "data" : { "$addToSet" :{'id':"$id"}}}}]
+    return list(db[collection].aggregate(pipeline, allowDiskUse=True))
+
+
+if __name__ == '__main__':
+    print(stat('annotation_unsupervised'))
