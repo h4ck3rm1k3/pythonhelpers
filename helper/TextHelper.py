@@ -3,7 +3,9 @@ from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 import string
 import nltk
+import statistics as st
 import re
+from helper.TweetPreprocessor import TweetPreprocessor
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
 wordnet_lemmatizer = WordNetLemmatizer()
@@ -59,3 +61,56 @@ class MySentences(object):
                 _,__,text  = line.split('\t')
                 yield tokenize(text)
 
+
+def frequency(dists, actual):
+
+    tWords = {}
+    # compute word frequency for each word in the past intervals
+    # frequencyPast = nltk.FreqDist(past)
+    # compute word frequency for each word in the current interval
+    frequencyActual = nltk.FreqDist(actual)
+    fdist = frequencyActual.most_common()
+    # return fdist[0][0] + " " + fdist[1][0]
+
+    for word, n in fdist:
+        count = []
+        count.extend([freq[word] for freq in dists])
+        print(count)
+        if len(count) > 1:
+            # count.append(n)
+            mean = sum(count) / len(count)
+            d = st.stdev(count)
+            if d==0:
+                d = 1
+            re = (n - mean) / d
+            print(word, mean,d,re)
+            tWords[word] = re
+            # print(word,count,n,mean,d)
+        else:
+            tWords[word] = n
+
+    dists.append(frequencyActual)
+    res = sorted(tWords.items(), key=lambda x: (-x[1], x[0]))
+    return res
+
+def frequentWords(dists, data):
+    # default_stopwords = set(nltk.corpus.stopwords.words(language))
+    tweet_preprocessor = TweetPreprocessor()
+    texts = ' '.join([y['text'] for y in data])
+    texts = tweet_preprocessor.preprocess(texts)
+    words = nltk.word_tokenize(texts)
+    # Lowercase all words (default_stopwords are lowercase too)
+    words = [word for word in words if word not in stop]
+    # Remove stop words
+    words = [word.lower() for word in words]
+    # Remove single-character tokens (mostly punctuation)
+    words = [word for word in words if len(word) > 3]
+    # Stem with snowbal
+    # stemmer = nltk.stem.snowball.SnowballStemmer('english')
+    # words = [stemmer.stem(word) for word in words]
+    # Remove numbers
+    words = [word for word in words if not word.isnumeric()]
+    # fdist = nltk.FreqDist(words)
+    tot = {}
+    d = frequency(dists, words)
+    return d

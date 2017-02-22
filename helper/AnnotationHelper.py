@@ -229,7 +229,9 @@ def getNodes(text, n=2):
 
 def groundTruthEvent(ids):
     gte = db.getEventCategory('annotation_unsupervised', ids)
+    print(ids)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=False)
+    print([(g["_id"]['event'], len(g['data'])) for g in gte])
     return [str(ev['_id']['event']) for ev in gte]
 
 def replacement():
