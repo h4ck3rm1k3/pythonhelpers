@@ -235,9 +235,28 @@ def aggregateDate(collection, day):
     return list(db[collection].aggregate(pipeline,allowDiskUse =True))
 
 def intervales(collection):
-    pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}, "data" : { "$addToSet" :'$id'}}},
-                {"$sort": {"_id.day": 1}}]
-    return {l['_id']['day']:l['data'] for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))}
+    pipeline = [
+        {"$group": {
+            "_id": {
+                "year": {"$year": "$date"},
+                "day": {"$dayOfYear": "$date"},
+                "interval": {
+                    "$subtract": [
+                        {"$minute": "$date"},
+                        {"$mod": [{"$minute": "$date"}, 15]}
+                    ]
+                }
+            },
+            "data": {"$addToSet": 'id'}
+        }
+        },
+        {"$sort": {"_id.day": 1, "_id.interval": 1}}
+    ]
+
+    """pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}, "data" : { "$addToSet" :'$id'}}},
+                {"$sort": {"_id.day": 1}}]"""
+
+    return [{'day' : l['_id']['day'], 'interval' : l['_id']['interval'], 'data':l['data']} for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
 
 def stat(collection):
     #pipeline = [ { "$group" : { "_id" : {"event_id" : "$event_id","day" : { "$dayOfYear" : "$date"}},
