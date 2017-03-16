@@ -234,7 +234,7 @@ def aggregateDate(collection, day):
     pipeline = [ { "$group" : { "_id" : {"day" : { "$dayOfYear" : "$date"}},"data" : { "$addToSet" :{'text':"$text", 'id': '$id', 'annotations':'$annotations'}}}},{ "$sort" : { "_id.day" : 1}}, {"$match" : {"_id.day" : day}}]
     return list(db[collection].aggregate(pipeline,allowDiskUse =True))
 
-def intervales(collection):
+def intervales(collection, param="hour", interval=2):
     pipeline = [
         {"$group": {
             "_id": {
@@ -242,8 +242,8 @@ def intervales(collection):
                 "day": {"$dayOfYear": "$date"},
                 "interval": {
                     "$subtract": [
-                        {"$minute": "$date"},
-                        {"$mod": [{"$minute": "$date"}, 15]}
+                        {"${}".format(param): "$date"},
+                        {"$mod": [{"${}".format(param): "$date"}, interval]}
                     ]
                 }
             },
