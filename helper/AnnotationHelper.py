@@ -214,8 +214,8 @@ def getNodes(text, n=2):
     ng = ngrams(tokens,n)
     return [t for t in ngrams(tokens,n)]
 
-def groundTruthEvent(ids):
-    gte = db.getEventCategory('annotation_unsupervised', ids)
+def groundTruthEvent(collection,ids):
+    gte = db.getEventCategory(collection, ids)
     tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=False)
     if tot > len(ids)/2:
@@ -293,4 +293,6 @@ def replacement():
 
 
 if __name__ == '__main__':
-    parseTweets()
+    db.connect("tweets_dataset")
+    res = groundTruthEvent("events_annotated", ['255831333614538753', '255831325100093440', '255831472152399872', '255833355269050368', '255831270758703104'])
+    print(res)

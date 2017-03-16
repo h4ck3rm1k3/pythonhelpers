@@ -225,9 +225,9 @@ def addTwetId():
 
 def getEventCategory(collection, ids):
     pipeline  = [
-{   "$match" : {"id" : {"$in":ids}}},
-{   "$group" : { "_id" : {"event":"$event_id"},"data" : { "$addToSet" :{'id': '$id'}}}}
-]
+        {   "$match" : {"id" : {"$in":ids}}},
+        {   "$group" : { "_id" : {"event":"$event_id"},"data" : { "$addToSet" :{'id': '$id'}}}}
+        ]
     return list(db[collection].aggregate(pipeline, allowDiskUse=True))
 
 def aggregateDate(collection, day):
@@ -247,7 +247,7 @@ def intervales(collection):
                     ]
                 }
             },
-            "data": {"$addToSet": 'id'}
+            "data": {"$addToSet": '$id'}
         }
         },
         {"$sort": {"_id.day": 1, "_id.interval": 1}}
