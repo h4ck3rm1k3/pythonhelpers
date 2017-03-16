@@ -17,24 +17,28 @@ def nerdIt(params,tt):
         cleanAnnotation(t)
         #print(t)
     print("Annotated", len(params))
-    db.insert("annotation_unsupervised", params)
+    db.insert("events_annotated", params)
 
 def parseTweets():
-    db.connect("event_2012")
-    limit, skip, index = 400, 400000, 0
+    db.connect("tweets_dataset")
+    limit, skip, index = 400, 0, 0
     separator = "==="
 
     while True:
         params = []
         tt = ""
         index = 0
-        res = list(db.find("tweets", limit=limit, skip=skip, query={'event_id' : {"$exists":False}}))
+        res = list(db.find("events", limit=limit, skip=skip))
         if len(res) > 0:
             for r in res:
                 text = str(r['text']).strip()
                 text = t.preprocess(text)
-                params.append(
-                    {"start": index, "end": len(text) + index + len(separator), 'text': text, 'annotations': [], 'id' : r['tweet_id'], 'date' : r['date'], 'dataset' : 'event 2012', 'event_id' : r['event_id'] if 'event_id' in r else -1})
+                param = r
+                del param['_id']
+                param['annotations'] = []
+                param['start'] = index
+                param['end'] = len(text) + index + len(separator)
+                params.append(param)
                 index += len(text) + len(separator)
                 tt += text + separator
         else:
@@ -198,25 +202,8 @@ def format(tweet, n=1):
 
     ents = []
     for a in mDicts:
-        """p = []
-        p.extend(text[0:a['start']].split()[-2:])
-        p.append(a['label'])
-        p.extend(text[a['end']:].split()[0:2])
-        res = ngrams(p, 2)
-        """
         ents.append(a['label'])
-        #cEntity = ' '.join(text[0:a['start']].split()[-1:]) + "_" + a['label'] + "_" + ' '.join(text[a['end']:].split()[0:1])
-        #a['edges'] =  [(' '.join(text[0:a['start']].split()[-3:-1]), cEntity),(cEntity, ' '.join(text[a['end']:].split()[1:3]))] #'{} {} {}'.format(' '.join(text[0:a['start']].split()[-2:]), a['label'], ' '.join(text[a['end']:].split()[0:2]))
         a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)] #'{} {} {}'.format(' '.join(text[0:a['start']].split()[-2:]), a['label'], ' '.join(text[a['end']:].split()[0:2]))
-
-    """if len(ents) > 1:
-        a = {'edges':[]}
-        for ng in ngrams(ents,2):
-            a['edges'].append((ng[0], ng[1], 2))
-        mDicts.append(a)"""
-
-    #print(text)
-    #print([p['edges'] for p in mDicts])
 
     return mDicts
 
@@ -229,10 +216,12 @@ def getNodes(text, n=2):
 
 def groundTruthEvent(ids):
     gte = db.getEventCategory('annotation_unsupervised', ids)
-    print(ids)
+    tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=False)
-    print([(g["_id"]['event'], len(g['data'])) for g in gte])
-    return [str(ev['_id']['event']) for ev in gte]
+    if tot > len(ids)/2:
+        return [str(ev['_id']['event']) for ev in gte]
+    else:
+        return []
 
 def replacement():
     db.connect("tweets_dataset")

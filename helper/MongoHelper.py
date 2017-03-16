@@ -15,9 +15,8 @@ index = 0
 
 def connect(databaseName):
     global db
-    if db is None:
-        client = MongoClient()
-        db = client[databaseName]
+    client = MongoClient()
+    db = client[databaseName]
     return db
 
 
@@ -236,9 +235,9 @@ def aggregateDate(collection, day):
     return list(db[collection].aggregate(pipeline,allowDiskUse =True))
 
 def intervales(collection):
-    pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}}},
+    pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}, "data" : { "$addToSet" :'$id'}}},
                 {"$sort": {"_id.day": 1}}]
-    return [l['_id']['day'] for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
+    return {l['_id']['day']:l['data'] for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))}
 
 def stat(collection):
     #pipeline = [ { "$group" : { "_id" : {"event_id" : "$event_id","day" : { "$dayOfYear" : "$date"}},

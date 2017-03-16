@@ -5,20 +5,29 @@ import string
 import nltk
 import statistics as st
 import re
+import pandas as pd
+import string
+import numpy as np
+import operator
 from helper.TweetPreprocessor import TweetPreprocessor
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 wordnet_lemmatizer = WordNetLemmatizer()
 
-tknzr = TweetTokenizer()
+tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
+tp = TweetPreprocessor()
 
-stop = stopwords.words('english') + list(string.punctuation) + ['rt', 'via', 'tweet', 'twitter', 'lol']
+stop = stopwords.words('english') + list(string.punctuation) + ['rt', 'via', 'tweet', 'twitter', 'lol', '"', "'", "lmao"]
 porter = nltk.PorterStemmer()
 
 def isStopWord(word):
     return word.lower() in stop
 
 def tokenize(text):
+    text = ' '.join(text.split())
+    text = tp.preprocess(text)
     tokens = [token for token in tknzr.tokenize(text.lower()) if token not in stop and len(token) > 2]
     return tokens
 
@@ -61,56 +70,28 @@ class MySentences(object):
                 _,__,text  = line.split('\t')
                 yield tokenize(text)
 
+def tokenizer(text):
+    text = text.lower()
+    tokens = text.split(sep="=>")
+    return [t for t in tokens if len(t) > 1]
 
-def frequency(dists, actual):
+def top_tfidf_feats(row, features, top_n=25):
+    ''' Get top n tfidf values in row and return them with their corresponding feature names.'''
+    topn_ids = np.argsort(row)[::-1]
+    top_feats = {features[i]:row[i] for i in topn_ids}
+    top_feats = {key:top_feats[key] for key in top_feats.keys() if top_feats[key] > 0}
+    return top_feats
 
-    tWords = {}
-    # compute word frequency for each word in the past intervals
-    # frequencyPast = nltk.FreqDist(past)
-    # compute word frequency for each word in the current interval
-    frequencyActual = nltk.FreqDist(actual)
-    fdist = frequencyActual.most_common()
-    # return fdist[0][0] + " " + fdist[1][0]
+def top_feats_in_doc(Xtr, features, row_id, top_n=25):
+    ''' Top tfidf features in specific document (matrix row) '''
+    row = np.squeeze(Xtr[row_id].toarray())
+    return top_tfidf_feats(row, features, top_n)
 
-    for word, n in fdist:
-        count = []
-        count.extend([freq[word] for freq in dists])
-        print(count)
-        if len(count) > 1:
-            # count.append(n)
-            mean = sum(count) / len(count)
-            d = st.stdev(count)
-            if d==0:
-                d = 1
-            re = (n - mean) / d
-            print(word, mean,d,re)
-            tWords[word] = re
-            # print(word,count,n,mean,d)
-        else:
-            tWords[word] = n
-
-    dists.append(frequencyActual)
-    res = sorted(tWords.items(), key=lambda x: (-x[1], x[0]))
-    return res
-
-def frequentWords(dists, data):
-    # default_stopwords = set(nltk.corpus.stopwords.words(language))
-    tweet_preprocessor = TweetPreprocessor()
-    texts = ' '.join([y['text'] for y in data])
-    texts = tweet_preprocessor.preprocess(texts)
-    words = nltk.word_tokenize(texts)
-    # Lowercase all words (default_stopwords are lowercase too)
-    words = [word for word in words if word not in stop]
-    # Remove stop words
-    words = [word.lower() for word in words]
-    # Remove single-character tokens (mostly punctuation)
-    words = [word for word in words if len(word) > 3]
-    # Stem with snowbal
-    # stemmer = nltk.stem.snowball.SnowballStemmer('english')
-    # words = [stemmer.stem(word) for word in words]
-    # Remove numbers
-    words = [word for word in words if not word.isnumeric()]
-    # fdist = nltk.FreqDist(words)
-    tot = {}
-    d = frequency(dists, words)
-    return d
+def buildTfIdf(docs):
+    vectorizer = TfidfVectorizer(min_df=1, tokenizer=tokenizer)
+    tfidf_matrix = vectorizer.fit_transform(docs)
+    feature_names = vectorizer.get_feature_names()
+    doc =  top_feats_in_doc(tfidf_matrix, feature_names, len(docs)-1)
+    return  doc
+    #sorted_x = sorted(doc.items(), key=operator.itemgetter(1))
+    #return sorted_x

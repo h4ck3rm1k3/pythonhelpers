@@ -1,8 +1,8 @@
 Metadata-Version: 1.0
 Name: helper
 Version: 0.1
-Summary: The funniest joke in the world
-Home-page: http://github.com/eamosse/helper
+Summary: Some helpers functions for text analysis with python
+Home-page: http://github.com/eamosse/pythonhelpers
 Author: Amosse Edouard
 Author-email: eamosse@gmail.com
 License: MIT
