@@ -218,10 +218,12 @@ def groundTruthEvent(collection,ids):
     gte = db.getEventCategory(collection, ids)
     tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=False)
-    if tot > len(ids)/2:
-        return [str(ev['_id']['event']) for ev in gte]
-    else:
-        return []
+    if tot > 0.8*len(ids):
+        for ev in gte :
+            if len(ev['data']) > 0.8*tot:
+                return [ev['_id']['event']]
+        #return [str(ev['_id']['event']) for ev in gte]
+    return []
 
 def replacement():
     db.connect("tweets_dataset")
@@ -294,5 +296,15 @@ def replacement():
 
 if __name__ == '__main__':
     db.connect("tweets_dataset")
-    res = groundTruthEvent("events_annotated", ['255831333614538753', '255831325100093440', '255831472152399872', '255833355269050368', '255831270758703104'])
+    res = groundTruthEvent("events_annotated",['256439947987386368', '256439956661215232', '256349577546981376',
+                                     '256351389456924673', '256469488600498176', '256439952420794368',
+                                     '256427180786061312', '256230920925880320', '256231294151819264',
+                                     '256349556638355457', '256381299206524929', '256382058342014976',
+                                     '256409946080563200', '256409400871366657', '256364555389788161',
+                                     '256455114603237376', '256440040194965504', '256351569753276416',
+                                     '256231084298231811', '256382049903058944', '256350961830879232',
+                                     '256350953165426688', '256439960855523328', '256382150541193217',
+                                     '256470499528417280', '256351624291815424', '256502472661663744',
+                                     '256365813857140736', '256365130139463681', '256379051177037824',
+                                     '256365708777226240'])
     print(res)
