@@ -253,6 +253,8 @@ def intervales(collection, param="hour", interval=2):
         {"$sort": {"_id.day": 1, "_id.interval": 1}}
     ]
 
+    print(pipeline)
+
     """pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}, "data" : { "$addToSet" :'$id'}}},
                 {"$sort": {"_id.day": 1}}]"""
 

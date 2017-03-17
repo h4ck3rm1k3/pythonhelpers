@@ -218,6 +218,7 @@ def groundTruthEvent(collection,ids):
     gte = db.getEventCategory(collection, ids)
     tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=False)
+    #print(gte)
     if tot > 0.60*len(ids):
         for ev in gte :
             if len(ev['data']) > 0.6*tot:
