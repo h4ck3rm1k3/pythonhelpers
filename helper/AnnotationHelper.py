@@ -29,7 +29,7 @@ def parseTweets():
         params = []
         tt = ""
         index = 0
-        res = list(db.find("events", limit=limit, skip=skip))
+        res = list(db.find("tweets", limit=limit, skip=skip))
         if len(res) > 0:
             for r in res:
                 text = str(r['text']).strip()
