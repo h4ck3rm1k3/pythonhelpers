@@ -3,6 +3,7 @@ from helper import MongoHelper as db
 from helper.nerd import  NERD
 from helper import Utils, TextHelper
 from nltk import ngrams
+import re
 from helper.TweetPreprocessor import TweetPreprocessor
 
 t = TweetPreprocessor()
@@ -20,8 +21,8 @@ def nerdIt(params,tt):
     db.insert("events_annotated", params)
 
 def parseTweets():
-    db.connect("tweets_dataset")
-    limit, skip, index = 400, 0, 0
+    db.connect("event_2012")
+    limit, skip, index = 2400, 200400, 0
     separator = "==="
 
     while True:
@@ -168,39 +169,39 @@ def isEntityConsidered(types):
     return isIn
 
 def format(tweet, n=1):
-    #text = str(tweet['text']).lower().replace("'s", "")
+
     text = t.preprocess(tweet['text'])
     text = ' '.join(TextHelper.tokenize(text))
-    #return [{'edges' : [t for t in ngrams(text.split(), 2)]}]
-
-    #text = ' '.join(text.split())
     _text =  ""
     newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
     index = 0
     mDicts= []
 
     for ann in newlist:
-
-        if ann['relevance'] < 0.1 or len(ann['label']) < 4:
+        ann['label'] = t.preprocess(ann['label']).lower()
+        if ann['relevance'] < 0.1 or not ann['uri']:
             continue
-        ann['label'] = t.preprocess(ann['label'].lower()).replace("'s", "")
+        uris = str(ann['uri']).split(sep="/")
+        label = uris[len(uris)-1]#.replace("_", " ")
+        #ann['label'] = t.preprocess(ann['label'].lower()).replace("'s", "")
         mDict = {}
         try:
             start =  text.index(ann['label'], index) if ann['label'] in text else -1
         except:
             start = -1
         end = index
-        if start > 0:
-            end = start + len(ann['label']) #ann['endChar'] - ann['startChar']
-            mDict ['label'] = ann['label']
+        if start >= 0:
+            text = text.replace(ann['label'], label)
+            end = start + len(label) #ann['endChar'] - ann['startChar']
+            mDict ['label'] = label
             mDict['start'] = start
             mDict['end'] = end
-
         if mDict:
             mDicts.append(mDict)
         index = end
 
     ents = []
+
     for a in mDicts:
         ents.append(a['label'])
         a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)] #'{} {} {}'.format(' '.join(text[0:a['start']].split()[-2:]), a['label'], ' '.join(text[a['end']:].split()[0:2]))
@@ -237,7 +238,6 @@ def replacement():
         for l in res:
             text = str(l['text'])
             _textYG, _textDG , _textYS, _textDS = "", "", "", ""
-            print(text)
             newlist = sorted(l['annotations'], key=itemgetter('startChar'))
             index = 0
 
@@ -296,16 +296,29 @@ def replacement():
 
 
 if __name__ == '__main__':
-    db.connect("tweets_dataset")
-    res = groundTruthEvent("events_annotated",['256439947987386368', '256439956661215232', '256349577546981376',
-                                     '256351389456924673', '256469488600498176', '256439952420794368',
-                                     '256427180786061312', '256230920925880320', '256231294151819264',
-                                     '256349556638355457', '256381299206524929', '256382058342014976',
-                                     '256409946080563200', '256409400871366657', '256364555389788161',
-                                     '256455114603237376', '256440040194965504', '256351569753276416',
-                                     '256231084298231811', '256382049903058944', '256350961830879232',
-                                     '256350953165426688', '256439960855523328', '256382150541193217',
-                                     '256470499528417280', '256351624291815424', '256502472661663744',
-                                     '256365813857140736', '256365130139463681', '256379051177037824',
-                                     '256365708777226240'])
-    print(res)
+    tweet = {
+    "id" : "255847766692081664",
+    "start" : 19408,
+    "event_id" : 502,
+    "end" : 19445,
+    "dataset" : "event 2012",
+    "annotations" : [
+        {
+            "confidence" : 1.81158,
+            "relevance" : 0.4674,
+            "startChar" : 19421,
+            "extractor" : "textrazor",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "idEntity" : 27346942,
+            "label" : "===Fat joe",
+            "uri" : "http://en.wikipedia.org/wiki/Fat_Joe",
+            "endChar" : 19431,
+            "extractorType" : "MusicalArtist,Agent,Person,Artist,/award/award_nominee,/music/group_member,/broadcast/artist,/celebrities/celebrity,/music/composer,/people/person,/tv/tv_personality,/organization/organization_founder,/tv/tv_actor,/internet/social_network_user,/music/featured_artist,/music/artist,/film/person_or_entity_appearing_in_film,/music/writer,/award/award_winner,/film/actor"
+        }
+    ],
+    "categorie_text" : "Arts, Culture & Entertainment",
+    "text" : "Fat joe was cold, fuck it still is",
+    "event_text" : "They all discuss about fat joe",
+}
+    _format = format(tweet)
+    print(_format)

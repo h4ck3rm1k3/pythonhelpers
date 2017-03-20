@@ -63,6 +63,8 @@ class TweetPreprocessor(object):
         re_sub = lambda pattern, repl: re.sub(pattern, repl, text, flags=self.FLAGS)
 
         text = re_sub(r"https?:\/\/\S+\b|www\.(\w+\.)+\S*", '')
+        regex = re.compile('[,\.!?_-]')  # etc.
+        text = regex.sub('', text)
         #text = re_sub(r"/"," / ")
         #text = re_sub(r"@\w+", self.USER)
         text = re_sub(r"{}{}[)dD]+|[)dD]+{}{}".format(eyes, nose, nose, eyes), self.SMILE)
@@ -75,6 +77,7 @@ class TweetPreprocessor(object):
         text = re_sub(r"@", '')
         text = re_sub(r"/", '')
         text = re_sub(r"'s", '')
+        text = re_sub(r"=", '')
         text = re_sub(r"'m", '')
         text = re_sub(r"'nt", '')
         text = re_sub(r"'@youtube", '')
