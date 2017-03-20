@@ -296,29 +296,4 @@ def replacement():
 
 
 if __name__ == '__main__':
-    tweet = {
-    "id" : "255847766692081664",
-    "start" : 19408,
-    "event_id" : 502,
-    "end" : 19445,
-    "dataset" : "event 2012",
-    "annotations" : [
-        {
-            "confidence" : 1.81158,
-            "relevance" : 0.4674,
-            "startChar" : 19421,
-            "extractor" : "textrazor",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
-            "idEntity" : 27346942,
-            "label" : "===Fat joe",
-            "uri" : "http://en.wikipedia.org/wiki/Fat_Joe",
-            "endChar" : 19431,
-            "extractorType" : "MusicalArtist,Agent,Person,Artist,/award/award_nominee,/music/group_member,/broadcast/artist,/celebrities/celebrity,/music/composer,/people/person,/tv/tv_personality,/organization/organization_founder,/tv/tv_actor,/internet/social_network_user,/music/featured_artist,/music/artist,/film/person_or_entity_appearing_in_film,/music/writer,/award/award_winner,/film/actor"
-        }
-    ],
-    "categorie_text" : "Arts, Culture & Entertainment",
-    "text" : "Fat joe was cold, fuck it still is",
-    "event_text" : "They all discuss about fat joe",
-}
-    _format = format(tweet)
-    print(_format)
+    parseTweets()
