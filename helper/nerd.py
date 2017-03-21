@@ -57,8 +57,8 @@ class NERD(object):
                           )
         response = self.http.getresponse()
         if int(response.status / 100) != 2:
-            time.sleep(3600)
             print("NERD is buging..., sleeping for 1 hour")
+            time.sleep(3600)
             return self.extract(text, service, timeout)
             #raise Exception("%s %s" % (response.status, response.reason))
         json = response.read()
@@ -77,8 +77,8 @@ class NERD(object):
 
         response = self.http.getresponse()
         if int(response.status / 100) != 2:
-            time.sleep(3600)
             print("NERD is buging..., sleeping for 1 hour")
+            time.sleep(3600)
             return self.extract(text, service,timeout)
             #raise Exception("%s %s" % (response.status, response.reason))
         json = response.read()
@@ -92,8 +92,8 @@ class NERD(object):
                           )
         response = self.http.getresponse()
         if int(response.status / 100) != 2:
-            time.sleep(3600)
             print("NERD is buging..., sleeping for 1 hour")
+            time.sleep(3600)
             return self.extract(text, service, timeout)
             #raise Exception("%s %s" % (response.status, response.reason))
         json = response.read()
