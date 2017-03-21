@@ -22,7 +22,7 @@ def nerdIt(params,tt):
 
 def parseTweets():
     db.connect("event_2012")
-    limit, skip, index = 400, 400400, 0
+    limit, skip, index = 400, 600400, 0
     separator = "==="
 
     while True:
@@ -179,9 +179,9 @@ def format(tweet, n=1):
 
     for ann in newlist:
         ann['label'] = t.preprocess(ann['label']).lower()
-        if ann['relevance'] < 0.1 or not ann['uri']:
+        if ann['relevance'] < 0.1 or not ann['extractorType']:
             continue
-        uris = str(ann['uri']).split(sep="/")
+        uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
         label = uris[len(uris)-1]#.replace("_", " ")
         #ann['label'] = t.preprocess(ann['label'].lower()).replace("'s", "")
         mDict = {}
@@ -194,6 +194,7 @@ def format(tweet, n=1):
             text = text.replace(ann['label'], label)
             end = start + len(label) #ann['endChar'] - ann['startChar']
             mDict ['label'] = label
+            mDict['type'] = ann['extractorType']
             mDict['start'] = start
             mDict['end'] = end
         if mDict:
@@ -204,7 +205,11 @@ def format(tweet, n=1):
 
     for a in mDicts:
         ents.append(a['label'])
-        a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)] #'{} {} {}'.format(' '.join(text[0:a['start']].split()[-2:]), a['label'], ' '.join(text[a['end']:].split()[0:2]))
+        a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)]
+
+    gg = ngrams(ents,2)
+    for g in gg:
+        mDicts.append({'edges' :[g[0], g[1]]})
 
     return mDicts
 
