@@ -18,11 +18,11 @@ def nerdIt(params,tt):
         cleanAnnotation(t)
         #print(t)
     print("Annotated", len(params))
-    db.insert("events_annotated", params)
+    db.insert("annotation_unsupervised", params)
 
 def parseTweets():
     db.connect("event_2012")
-    limit, skip, index = 400, 200400, 0
+    limit, skip, index = 400, 400400, 0
     separator = "==="
 
     while True:
@@ -218,12 +218,15 @@ def getNodes(text, n=2):
 def groundTruthEvent(collection,ids):
     gte = db.getEventCategory(collection, ids)
     tot = sum(len(d['data']) for d in gte)
-    gte = sorted(gte, key=lambda k: len(k['data']), reverse=False)
+    gte = sorted(gte, key=lambda k: len(k['data']), reverse=True)
+    print([(e['_id'], len(e['data'])) for e in gte])
     #print(gte)
-    if tot > 0.60*len(ids):
-        for ev in gte :
+    if tot > 0.20*len(ids):
+        return [gte[0]['_id']['event']]
+        """for ev in gte :
+            print(ev['_id']['event'], len(ev['data']), len(ids))
             if len(ev['data']) > 0.6*tot:
-                return [ev['_id']['event']]
+                return [ev['_id']['event']]"""
         #return [str(ev['_id']['event']) for ev in gte]
     return []
 

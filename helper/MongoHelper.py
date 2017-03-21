@@ -235,11 +235,12 @@ def aggregateDate(collection, day):
     return list(db[collection].aggregate(pipeline,allowDiskUse =True))
 
 def intervales(collection, param="hour", interval=2):
+    from collections import OrderedDict
     pipeline = [
         {"$group": {
             "_id": {
                 "year": {"$year": "$date"},
-                "day": {"$dayOfYear": "$date"},
+                "intervalday": {"$dayOfYear": "$date"},
                 "interval": {
                     "$subtract": [
                         {"${}".format(param): "$date"},
@@ -250,15 +251,19 @@ def intervales(collection, param="hour", interval=2):
             "data": {"$addToSet": '$id'}
         }
         },
-        {"$sort": {"_id.day": 1, "_id.interval": 1}}
+        #{"$sort": {"_id.day": 1, "_id.cinterval": 1}}
     ]
+
+    sort = OrderedDict()
+    sort["_id.intervalday"]=  1
+    sort["_id.interval"]=  1
+
+    pipeline.append({"$sort":sort})
+    #pipeline = [{'$group': {'_id': {'intervalday': {'$dayOfYear': '$date'}, 'year': {'$year': '$date'}, 'interval': {'$subtract': [{'$hour': '$date'}, {'$mod': [{'$hour': '$date'}, 1]}]}}, 'data': {'$addToSet': '$id'}}}, {'$sort': {'_id.interval': 1, '_id.intervalday': 1}}]
 
     print(pipeline)
 
-    """pipeline = [{"$group": {"_id": {"day": {"$dayOfYear": "$date"}}, "data" : { "$addToSet" :'$id'}}},
-                {"$sort": {"_id.day": 1}}]"""
-
-    return [{'day' : l['_id']['day'], 'interval' : l['_id']['interval'], 'data':l['data']} for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
+    return [{'day' : l['_id']['intervalday'], 'interval' : l['_id']['interval'], 'data':l['data']} for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
 
 def stat(collection):
     #pipeline = [ { "$group" : { "_id" : {"event_id" : "$event_id","day" : { "$dayOfYear" : "$date"}},
