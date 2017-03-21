@@ -209,7 +209,7 @@ def format(tweet, n=1):
 
     gg = ngrams(ents,2)
     for g in gg:
-        mDicts.append({'edges' :[g[0], g[1]]})
+        mDicts.append({'edges' :[(g[0], g[1], 2)]})
 
     return mDicts
 
