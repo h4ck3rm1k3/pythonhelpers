@@ -13,22 +13,25 @@ from helper.TweetPreprocessor import TweetPreprocessor
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+import codecs
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
 tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
 tp = TweetPreprocessor()
-
 stop = stopwords.words('english') + list(string.punctuation) + ['rt', 'via', 'tweet', 'twitter', 'lol', '"', "'", "lmao"]
+default_stopwords = set(stop)
+custom_stopwords = set(codecs.open("stops.txt".format("english"), 'r',).read().splitlines())
+all_stopwords = list(default_stopwords | custom_stopwords)
 porter = nltk.PorterStemmer()
 
 def isStopWord(word):
-    return word.lower() in stop
+    return word.lower() in all_stopwords
 
 def tokenize(text):
     text = ' '.join(text.split())
     text = tp.preprocess(text)
-    tokens = [token for token in tknzr.tokenize(text.lower()) if token not in stop and len(token) > 2]
+    tokens = [token for token in tknzr.tokenize(text.lower()) if token not in all_stopwords and len(token) > 2]
     return tokens
 
 def isInWordNet(word):
@@ -55,6 +58,7 @@ def similarity(w1, w2, sim=wn.path_similarity):
 
 
 def lemmatize(word):
+    word = word.lower()
     wordv =  wordnet_lemmatizer.lemmatize(word, pos='v')
     if wordv == word:
         wordv = wordnet_lemmatizer.lemmatize(word, pos='n')

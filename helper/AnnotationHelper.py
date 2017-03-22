@@ -169,47 +169,55 @@ def isEntityConsidered(types):
     return isIn
 
 def format(tweet, n=1):
-
     text = t.preprocess(tweet['text'])
-    text = ' '.join(TextHelper.tokenize(text))
-    _text =  ""
-    newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
-    index = 0
-    mDicts= []
+    text = TextHelper.tokenize(text)
+    mDicts = []
+    if(tweet['annotations']):
+        text = ' '.join(text)
+        newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
+        index = 0
 
-    for ann in newlist:
-        ann['label'] = t.preprocess(ann['label']).lower()
-        if ann['relevance'] < 0.1 or not ann['extractorType']:
-            continue
-        uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
-        label = uris[len(uris)-1]#.replace("_", " ")
-        #ann['label'] = t.preprocess(ann['label'].lower()).replace("'s", "")
-        mDict = {}
-        try:
-            start =  text.index(ann['label'], index) if ann['label'] in text else -1
-        except:
-            start = -1
-        end = index
-        if start >= 0:
-            text = text.replace(ann['label'], label)
-            end = start + len(label) #ann['endChar'] - ann['startChar']
-            mDict ['label'] = label
-            mDict['type'] = ann['extractorType']
-            mDict['start'] = start
-            mDict['end'] = end
-        if mDict:
-            mDicts.append(mDict)
-        index = end
+        for ann in newlist:
+            ann['label'] = t.preprocess(ann['label']).lower()
+            if ann['relevance'] < 0.1 or not ann['extractorType']:
+                continue
+            uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
+            label = uris[len(uris)-1]
+            if '(' in label:
+                labels = label.split("_(")[:-1]
+                label = '_('.join(labels)
+            mDict = {}
+            try:
+                start =  text.index(ann['label'], index) if ann['label'] in text else -1
+            except:
+                start = -1
+            end = index
+            if start >= 0:
+                text = text.replace(ann['label'], label)
+                end = start + len(label) #ann['endChar'] - ann['startChar']
+                mDict ['label'] = label
+                mDict['type'] = ann['extractorType']
+                mDict['start'] = start
+                mDict['end'] = end
+            if mDict:
+                mDicts.append(mDict)
+            index = end
 
-    ents = []
+        ents = []
 
-    for a in mDicts:
-        ents.append(a['label'])
-        a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)]
+        for a in mDicts:
+            ents.append(a['label'])
+            a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)]
 
-    gg = ngrams(ents,2)
-    for g in gg:
-        mDicts.append({'edges' :[(g[0], g[1], 2)]})
+        gg = ngrams(ents,2)
+        for g in gg:
+            mDicts.append({'edges' :[(g[0], g[1], 2)]})
+
+    else:
+        pass
+        """parts = ngrams(text,2)
+        for g in parts:
+            mDicts.append({'edges': [(g[0], g[1], 0)]})"""
 
     return mDicts
 
@@ -225,14 +233,9 @@ def groundTruthEvent(collection,ids):
     tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=True)
     print([(e['_id'], len(e['data'])) for e in gte])
-    #print(gte)
+
     if tot > 0.20*len(ids):
         return [gte[0]['_id']['event']]
-        """for ev in gte :
-            print(ev['_id']['event'], len(ev['data']), len(ids))
-            if len(ev['data']) > 0.6*tot:
-                return [ev['_id']['event']]"""
-        #return [str(ev['_id']['event']) for ev in gte]
     return []
 
 def replacement():
@@ -304,4 +307,28 @@ def replacement():
 
 
 if __name__ == '__main__':
-    parseTweets()
+    tweet = {
+    "event_id" : 3,
+    "dataset" : "event 2012",
+    "event_text" : "St. Louis Cardinals win their National League Divisional Series agains the Washington Nationals.",
+    "text" : "This cardinals game is #crazy #tieditup",
+    "start" : 9343,
+    "categorie_text" : "Sports",
+    "annotations" : [
+        {
+            "extractorType" : "Agent,Organisation,SportsTeam,BaseballTeam,/book/book_subject,/baseball/baseball_team,/business/employer,/sports/sports_team,/sports/professional_sports_team,/sports/sports_team_owner,/organization/organization,/award/award_nominee",
+            "idEntity" : 27361414,
+            "endChar" : 9358,
+            "confidence" : 0.100316,
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
+            "uri" : "http://en.wikipedia.org/wiki/St._Louis_Cardinals",
+            "label" : "cardinals",
+            "extractor" : "textrazor",
+            "relevance" : 0.4497,
+            "startChar" : 9349
+        }
+    ],
+    "id" : "256971370662084609",
+    "end" : 9383
+}
+    print(format(tweet))
