@@ -99,3 +99,7 @@ def buildTfIdf(docs):
     return  doc
     #sorted_x = sorted(doc.items(), key=operator.itemgetter(1))
     #return sorted_x
+
+if __name__ == '__main__':
+    text = "this is a fuck bull shiet"
+    print(tokenize(text))
