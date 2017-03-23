@@ -4,9 +4,6 @@ from helper.nerd import  NERD
 from helper import Utils, TextHelper
 from nltk import ngrams
 import re
-from helper.TweetPreprocessor import TweetPreprocessor
-
-t = TweetPreprocessor()
 
 def nerdIt(params,tt):
     timeout = 10
@@ -107,34 +104,6 @@ def dbpediaIt(uri):
 
     return dbpedias,yagos
 
-def clean():
-    db.connect("tweets_dataset")
-    limit, skip = 400, 0
-    while True:
-        res = list(db.find("annotation_python", limit=limit, skip=skip))
-        if not res:
-            break
-        skip+=limit
-        for r in res:
-            annoations = r['annotations']
-            if not annoations:
-                continue
-            ann = []
-            found = False
-            for i, a in enumerate(annoations):
-                for j, b in enumerate(annoations):
-                    if j==i:
-                        continue
-                    if (a['startChar'] >= b['startChar'] and a['endChar'] <= b['endChar']):
-                        found = True
-                        break
-                if not found:
-                    ann.append(a)
-                found = False
-            r['annotations'] = ann
-        db.insert("annotation_purge", res)
-
-
 
 def loadAnnotations():
     db.connect("tweets_dataset")
@@ -168,58 +137,6 @@ def isEntityConsidered(types):
             break
     return isIn
 
-def format(tweet, n=1):
-    text = t.preprocess(tweet['text'])
-    text = TextHelper.tokenize(text)
-    mDicts = []
-    if(tweet['annotations']):
-        text = ' '.join(text)
-        newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
-        index = 0
-
-        for ann in newlist:
-            ann['label'] = t.preprocess(ann['label']).lower()
-            if ann['relevance'] < 0.1 or not ann['extractorType']:
-                continue
-            uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
-            label = uris[len(uris)-1]
-            if '(' in label:
-                labels = label.split("_(")[:-1]
-                label = '_('.join(labels)
-            mDict = {}
-            try:
-                start =  text.index(ann['label'], index) if ann['label'] in text else -1
-            except:
-                start = -1
-            end = index
-            if start >= 0:
-                text = text.replace(ann['label'], label)
-                end = start + len(label) #ann['endChar'] - ann['startChar']
-                mDict ['label'] = label
-                mDict['type'] = ann['extractorType']
-                mDict['start'] = start
-                mDict['end'] = end
-            if mDict:
-                mDicts.append(mDict)
-            index = end
-
-        ents = []
-
-        for a in mDicts:
-            ents.append(a['label'])
-            a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)]
-
-        gg = ngrams(ents,2)
-        for g in gg:
-            mDicts.append({'edges' :[(g[0], g[1], 2)]})
-
-    else:
-        pass
-        """parts = ngrams(text,2)
-        for g in parts:
-            mDicts.append({'edges': [(g[0], g[1], 0)]})"""
-
-    return mDicts
 
 def getNodes(text, n=2):
     text = t.preprocess(text)
@@ -232,7 +149,7 @@ def groundTruthEvent(collection,ids):
     gte = db.getEventCategory(collection, ids)
     tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=True)
-    print([(e['_id'], len(e['data'])) for e in gte])
+    #print([(e['_id'], len(e['data'])) for e in gte])
 
     if tot > 0.20*len(ids):
         return [gte[0]['_id']['event']]
@@ -303,15 +220,12 @@ def replacement():
             db.update("annotation_purge", {"id":l['id']}, d)
 
 
-
-
-
 if __name__ == '__main__':
     tweet = {
     "event_id" : 3,
     "dataset" : "event 2012",
     "event_text" : "St. Louis Cardinals win their National League Divisional Series agains the Washington Nationals.",
-    "text" : "This cardinals game is #crazy #tieditup",
+    "text" : "This cardinals game is fuck #crazy #tieditup",
     "start" : 9343,
     "categorie_text" : "Sports",
     "annotations" : [

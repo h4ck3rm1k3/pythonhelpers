@@ -50,7 +50,6 @@ def loadParameters(y_score, y_pred, y, classes):
     # Compute micro-average ROC curve and ROC area
     precision["micro"], recall["micro"], _ = precision_recall_curve(y.ravel(),
                                                                     y_score.ravel())
-
     average_precision["micro"] = average_precision_score(y, y_score,
                                                          average="micro")
     return precision,recall,average_precision

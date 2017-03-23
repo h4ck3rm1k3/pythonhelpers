@@ -261,7 +261,7 @@ def intervales(collection, param="hour", interval=2):
     pipeline.append({"$sort":sort})
     #pipeline = [{'$group': {'_id': {'intervalday': {'$dayOfYear': '$date'}, 'year': {'$year': '$date'}, 'interval': {'$subtract': [{'$hour': '$date'}, {'$mod': [{'$hour': '$date'}, 1]}]}}, 'data': {'$addToSet': '$id'}}}, {'$sort': {'_id.interval': 1, '_id.intervalday': 1}}]
 
-    print(pipeline)
+    #print(pipeline)
 
     return [{'day' : l['_id']['intervalday'], 'interval' : l['_id']['interval'], 'data':l['data']} for l in list(db[collection].aggregate(pipeline, allowDiskUse=True))]
 
