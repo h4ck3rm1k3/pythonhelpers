@@ -38,6 +38,9 @@ def find(collection, limit=0, skip=0, query={}):
         results = data.find(query).sort("_id", pymongo.ASCENDING).limit(limit).skip(skip)
     return list(results)
 
+def remove(collection, query):
+    collection = db[collection]
+    collection.delete_many(query)
 
 def setCategoryForTweets():
     data = find("category")
@@ -47,33 +50,6 @@ def setCategoryForTweets():
                                       {"$set": {"category": category["_id"]}})
 
         print(category["event_id"], ":", "match", ":", result.matched_count, "modified", " : ", result.modified_count)
-
-
-def setTweetAuthor(data):
-    for tweet in data:
-        result = db.tweet.update_many({"tweet_id": tweet["tweet_id"]},
-                                      {"$set": {"author": tweet['author'], 'date': tweet['date']}})
-        # print("match-tweet", ":", result.matched_count,"modified", " : ", result.modified_count)
-        if (result.matched_count == 0):
-            print("tweet", tweet["tweet_id"])
-
-        result = db.annotated.update_many({"tweet_id": tweet["tweet_id"]},
-                                          {"$set": {"author": tweet['author'], 'date': tweet['date']}})
-        if (result.matched_count == 0):
-            print("annotated", tweet["tweet_id"])
-            # print("match-annoated", ":", result.matched_count,"modified", " : ", result.modified_count)
-
-
-def modifyAnnotation(tweet_id):
-    data = ["STANFORD", "ST", "TweetNLP", "NERD", "TEXTRAZOR", "ALCHEMYAPI", "COMBINED", "DANDELIONAPI", "NERDML",
-            "RITTER"]
-    db.annotation.remove({"type": {"$in": data}, "tweet": tweet_id})
-    """
-    for annotation in data:
-        result = db.annotation.update_one({"_id": annotation["_id"]},
-                                      {"$set":{"extractorType":annotation["nerdType"]}})
-        print("match", ":", result.matched_count,"modified", " : ", result.modified_count)
-    """
 
 
 def update(collection, condition, value):
@@ -148,25 +124,6 @@ def buildDictionnary(dataset, ontology, _type):
     return token_dict
 
 
-def preprocessingDataset():
-    # Load the tweets
-    i = 0
-    while True:
-        # print ('Iteration ', i)
-        annotations = find('annotated', 1000, i, {})
-        if annotations.count(True) == 0:
-            print("Empty")
-            break;
-
-        for annotation in annotations:
-            # print (annotation)
-            text = preprocess(annotation["text"])
-            result = db.annotated.update({"_id": annotation["_id"]},
-                                         {'$set': {"text_snowball": text}})
-            print(result)
-        i += 1000
-    print('Done')
-
 
 def denormalizeTweetId():
     # Load the tweets
@@ -203,25 +160,6 @@ def loadCategories():
                                           {'$set': {"category": mdict[category["categorie_text"]]}})
         print("match", ":", result.matched_count, "modified", " : ", result.modified_count)
 
-
-def addTwetId():
-    # Load the tweets
-    i = 0
-    index = 0
-    while True:
-        annotations = find('annotated', 1000, i, {'tweet_id': {'$exists': False}})
-        index = index + 1
-        if annotations.count(True) == 0:
-            print("Empty")
-            break;
-
-        for annotation in annotations:
-            "tweet = findOneByKey('tweet','_id', annotation['tweet'])"
-            result = db.annotated.update_many({"tweet": annotation['tweet']},
-                                              {'$set': {"tweet_id": tweet["tweet_id"]}})
-            print("match", ":", result.matched_count, "modified", " : ", result.modified_count)
-        i += 1000
-    print('Done')
 
 def getEventCategory(collection, ids):
     pipeline  = [

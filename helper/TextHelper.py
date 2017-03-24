@@ -15,8 +15,8 @@ from nltk import ngrams
 
 t = TweetPreprocessor()
 
-"""if not symspell.dictionary:
-    symspell.create_dictionary("big.txt")"""
+if not symspell.dictionary:
+    symspell.create_dictionary("big.txt")
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
