@@ -177,7 +177,7 @@ def get_suggestions(string, silent=False):
             break
         # process queue item
         if (q_item in dictionary) and (q_item not in suggest_dict):
-            if (dictionary[q_item][1]>=0):
+            if (dictionary[q_item][1]>0):
             # not already in suggestion list so add to suggestion
             # dictionary, indexed by the word with value (frequency in
             # corpus, edit distance)
@@ -293,36 +293,6 @@ def correct_sentence (sentence):
         print((doc_word, suggestion))
         _sentence.append(suggestion if suggestion else doc_word)
     return ' '.join(_sentence)
-
-def correct_document(fname, printlist=True):
-    # correct an entire document
-    with open(fname) as file:
-        doc_word_count = 0
-        corrected_word_count = 0
-        unknown_word_count = 0
-        print("Finding misspelled words in your document...") 
-        
-        for i, line in enumerate(file):
-            # separate by words by non-alphabetical characters      
-            doc_words = re.findall('[a-z]+', line.lower())  
-            for doc_word in doc_words:
-                doc_word_count += 1
-                suggestion = best_word(doc_word, silent=True)
-                if suggestion is None:
-                    if printlist:
-                        print(("In line %i, the word < %s > was not found (no suggested correction)" % (i, doc_word)))
-                    unknown_word_count += 1
-                elif suggestion[0]!=doc_word:
-                    if printlist:
-                        print(("In line %i, %s: suggested correction is < %s >" % (i, doc_word, suggestion[0])))
-                    corrected_word_count += 1
-        
-    print("-----")
-    print(("total words checked: %i" % doc_word_count))
-    print(("total unknown words: %i" % unknown_word_count))
-    print(("total potential errors found: %i" % corrected_word_count))
-
-    return
 
 def save(data):
     np.save('symmodel.npy', data)
