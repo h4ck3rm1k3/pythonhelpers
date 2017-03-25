@@ -1,5 +1,6 @@
 import re
-
+import numpy as np
+from nltk.corpus import wordnet as wn
 max_edit_distance = 3 
 verbose = 0
 # 0: top suggestion
@@ -60,27 +61,46 @@ def create_dictionary_entry(w):
         
     return new_real_word_added
 
-def create_dictionary(fname):
 
+def create_dictionary_from_wordnet():
+    print("Creating dictionary...")
+    synsets = wn.all_synsets()
     total_word_count = 0
     unique_word_count = 0
-    
-    with open(fname) as file:
-        print("Creating dictionary...")     
-        for line in file:
-            # separate by words by non-alphabetical characters      
-            words = re.findall('[a-z]+', line.lower())  
-            for word in words:
-                total_word_count += 1
-                if create_dictionary_entry(word):
-                    unique_word_count += 1
-    
+
+    for synset in synsets:
+        total_word_count += 1
+        if create_dictionary_entry(synset.lemma_names()[0]):
+            unique_word_count += 1
+
+
     print("total words processed: %i" % total_word_count)
     print("total unique words in corpus: %i" % unique_word_count)
     print("total items in dictionary (corpus words and deletions): %i" % len(dictionary))
     print("  edit distance for deletions: %i" % max_edit_distance)
     print("  length of longest word in corpus: %i" % longest_word_length)
-        
+    return  dictionary
+
+
+def create_dictionary(fname):
+    print("Creating dictionary...")
+    with open(fname) as file:
+        print("Creating dictionary...")
+        for line in file:
+            # separate by words by non-alphabetical characters
+            words = re.findall('[a-z]+', line.lower())
+            for word in words:
+                total_word_count += 1
+                if create_dictionary_entry(word):
+                    unique_word_count += 1
+
+    print("total words processed: %i" % total_word_count)
+    print("total unique words in corpus: %i" % unique_word_count)
+    print("total items in dictionary (corpus words and deletions): %i" % len(dictionary))
+    print("  edit distance for deletions: %i" % max_edit_distance)
+    print("  length of longest word in corpus: %i" % longest_word_length)
+
+
     return dictionary
 
 def dameraulevenshtein(seq1, seq2):
@@ -305,6 +325,11 @@ def correct_document(fname, printlist=True):
 
     return
 
+def save(data):
+    np.save('symmodel.npy', data)
+
+def load(file):
+    return np.load(file)
 ## main
 
 import time
@@ -312,31 +337,13 @@ import time
 if __name__ == "__main__":
     
     print("Please wait...")
-    time.sleep(2)
     start_time = time.time()
-    try:
-        create_dictionary("big.txt")
-    except:
-        create_dictionary("testdata/big.txt")
+    dictionary = create_dictionary_from_wordnet()
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
     print('-----')
+    save(dictionary)
 
-    print(" ")
-    print("Word correction")
-    print("---------------")
-    
-    while True:
-        word_in = input('Enter your input (or enter to exit): ')
-        if len(word_in)==0:
-            print("goodbye")
-            break
-        start_time = time.time()
-        print(get_suggestions(word_in))
-        run_time = time.time() - start_time
-        print('-----')
-        print('%.5f seconds to run' % run_time)
-        print('-----')
-        print(" ")
+
 

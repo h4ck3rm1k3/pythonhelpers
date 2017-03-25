@@ -15,8 +15,8 @@ from nltk import ngrams
 
 t = TweetPreprocessor()
 
-if not symspell.dictionary:
-    symspell.create_dictionary("big.txt")
+"""if not symspell.dictionary:
+    symspell.create_dictionary_from_wordnet()"""
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
@@ -48,6 +48,7 @@ def distance(word1, word2):
     return nltk.edit_distance(word1,word2)
 
 def similarity(w1, w2, sim=wn.path_similarity):
+
   synsets1 = wn.synsets(w1)
   synsets2 = wn.synsets(w2)
   sim_scores = []
@@ -152,6 +153,9 @@ def extract_entity_context(tweet, n=1):
 
     return mDicts
 
+
 if __name__ == '__main__':
-    text = "this is a fuck bull shiet"
-    print(tokenize(text))
+    data = {'test': "hello", "test1":"world"}
+    save(data)
+    data2 = load('temp.npy')
+    print(data2)
