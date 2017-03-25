@@ -339,7 +339,7 @@ if __name__ == "__main__":
     
     print("Please wait...")
     start_time = time.time()
-    dictionary = create_dictionary("/home/aedouard/Documents/_dev/event_detection/unsupervised/words3.txt")
+    dictionary = create_dictionary("words3.txt")
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
