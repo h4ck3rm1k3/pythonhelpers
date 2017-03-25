@@ -4,6 +4,8 @@ from helper.nerd import  NERD
 from helper import Utils, TextHelper
 from nltk import ngrams
 import re
+from helper.TweetPreprocessor import TweetPreprocessor
+t = TweetPreprocessor()
 
 def nerdIt(params,tt):
     timeout = 10
@@ -19,7 +21,7 @@ def nerdIt(params,tt):
 
 def parseTweets():
     db.connect("event_2012")
-    limit, skip, index = 200, 600400, 0
+    limit, skip, index = 400, 1000400, 0
     separator = "==="
 
     while True:
@@ -245,4 +247,4 @@ if __name__ == '__main__':
     "id" : "256971370662084609",
     "end" : 9383
 }
-    print(format(tweet))
+    parseTweets()
