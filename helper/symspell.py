@@ -83,7 +83,8 @@ def create_dictionary_from_wordnet():
 
 
 def create_dictionary(fname):
-    print("Creating dictionary...")
+    total_word_count = 0
+    unique_word_count = 0
     with open(fname) as file:
         print("Creating dictionary...")
         for line in file:
@@ -338,7 +339,7 @@ if __name__ == "__main__":
     
     print("Please wait...")
     start_time = time.time()
-    dictionary = create_dictionary_from_wordnet()
+    dictionary = create_dictionary("/home/aedouard/Documents/_dev/event_detection/unsupervised/words3.txt")
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
