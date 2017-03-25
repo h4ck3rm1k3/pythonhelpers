@@ -74,11 +74,11 @@ def create_dictionary_from_wordnet():
             unique_word_count += 1
 
 
-    print("total words processed: %i" % total_word_count)
-    print("total unique words in corpus: %i" % unique_word_count)
-    print("total items in dictionary (corpus words and deletions): %i" % len(dictionary))
-    print("  edit distance for deletions: %i" % max_edit_distance)
-    print("  length of longest word in corpus: %i" % longest_word_length)
+    print(("total words processed: %i" % total_word_count))
+    print(("total unique words in corpus: %i" % unique_word_count))
+    print(("total items in dictionary (corpus words and deletions): %i" % len(dictionary)))
+    print(("  edit distance for deletions: %i" % max_edit_distance))
+    print(("  length of longest word in corpus: %i" % longest_word_length))
     return  dictionary
 
 
@@ -95,11 +95,11 @@ def create_dictionary(fname):
                 if create_dictionary_entry(word):
                     unique_word_count += 1
 
-    print("total words processed: %i" % total_word_count)
-    print("total unique words in corpus: %i" % unique_word_count)
-    print("total items in dictionary (corpus words and deletions): %i" % len(dictionary))
-    print("  edit distance for deletions: %i" % max_edit_distance)
-    print("  length of longest word in corpus: %i" % longest_word_length)
+    print(("total words processed: %i" % total_word_count))
+    print(("total unique words in corpus: %i" % unique_word_count))
+    print(("total items in dictionary (corpus words and deletions): %i" % len(dictionary)))
+    print(("  edit distance for deletions: %i" % max_edit_distance))
+    print(("  length of longest word in corpus: %i" % longest_word_length))
 
 
     return dictionary
@@ -157,7 +157,7 @@ def get_suggestions(string, silent=False):
        spelled word'''
     if (len(string) - longest_word_length) > max_edit_distance:
         if not silent:
-            print("no items in dictionary within maximum edit distance", string)
+            print(("no items in dictionary within maximum edit distance", string))
         return []
     
     global verbose
@@ -259,8 +259,8 @@ def get_suggestions(string, silent=False):
     # queue is now empty: convert suggestions in dictionary to 
     # list for output
     if not silent and verbose!=0:
-        print("number of possible corrections: %i" %len(suggest_dict))
-        print("  edit distance for deletions: %i" % max_edit_distance)
+        print(("number of possible corrections: %i" %len(suggest_dict)))
+        print(("  edit distance for deletions: %i" % max_edit_distance))
     
     # output option 1
     # sort results by ascending order of edit distance and descending 
@@ -292,7 +292,7 @@ def correct_sentence (sentence):
     doc_words = re.findall('[a-z]+', sentence.lower())
     for doc_word in doc_words:
         suggestion = best_word(doc_word, silent=True)
-        print(doc_word, suggestion)
+        print((doc_word, suggestion))
         _sentence.append(suggestion if suggestion else doc_word)
     return ' '.join(_sentence)
 
@@ -312,17 +312,17 @@ def correct_document(fname, printlist=True):
                 suggestion = best_word(doc_word, silent=True)
                 if suggestion is None:
                     if printlist:
-                        print("In line %i, the word < %s > was not found (no suggested correction)" % (i, doc_word))
+                        print(("In line %i, the word < %s > was not found (no suggested correction)" % (i, doc_word)))
                     unknown_word_count += 1
                 elif suggestion[0]!=doc_word:
                     if printlist:
-                        print("In line %i, %s: suggested correction is < %s >" % (i, doc_word, suggestion[0]))
+                        print(("In line %i, %s: suggested correction is < %s >" % (i, doc_word, suggestion[0])))
                     corrected_word_count += 1
         
     print("-----")
-    print("total words checked: %i" % doc_word_count)
-    print("total unknown words: %i" % unknown_word_count)
-    print("total potential errors found: %i" % corrected_word_count)
+    print(("total words checked: %i" % doc_word_count))
+    print(("total unknown words: %i" % unknown_word_count))
+    print(("total potential errors found: %i" % corrected_word_count))
 
     return
 
@@ -336,15 +336,41 @@ def load(file):
 import time
 
 if __name__ == "__main__":
-    
+
     print("Please wait...")
     start_time = time.time()
-    dictionary = create_dictionary("words3.txt")
+    dictionary = load('symmodel.npy')
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
     print('-----')
-    save(dictionary)
+
+
+    print( "Word correction")
+    print("---------------")
+
+    while True:
+        word_in = input('Enter your input (or enter to exit): ')
+        if len(word_in) == 0:
+            print()
+            "goodbye"
+            break
+        start_time = time.time()
+        print(get_suggestions(word_in))
+        run_time = time.time() - start_time
+        print('-----')
+        print('%.5f seconds to run' % run_time)
+        print('-----')
+
+
+    """print("Please wait...")
+    start_time = time.time()
+    dictionary = create_dictionary("words3.txt")
+    run_time = time.time() - start_time
+    print('-----')
+    print(('%.2f seconds to run' % run_time))
+    print('-----')
+    save(dictionary)"""
 
 
 
