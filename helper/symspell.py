@@ -85,6 +85,7 @@ def create_dictionary_from_wordnet():
 def create_dictionary(fname):
     total_word_count = 0
     unique_word_count = 0
+    index = 0
     with open(fname) as file:
         print("Creating dictionary...")
         for line in file:
@@ -163,8 +164,7 @@ def get_suggestions(string, silent=False):
     global verbose
     suggest_dict = {}
     min_suggest_len = float('inf')
-    print("Word", string)
-    
+
     queue = [string]
     q_dictionary = {}  # items other than string that we've checked
     
@@ -176,12 +176,10 @@ def get_suggestions(string, silent=False):
         if ((verbose<2) and (len(suggest_dict)>0) and 
               ((len(string)-len(q_item))>min_suggest_len)):
             break
-        
         # process queue item
         if (q_item in dictionary) and (q_item not in suggest_dict):
-            if (dictionary[q_item][1]>0):
-            # word is in dictionary, and is a word from the corpus, and 
-            # not already in suggestion list so add to suggestion 
+            if (dictionary[q_item][1]>=0):
+            # not already in suggestion list so add to suggestion
             # dictionary, indexed by the word with value (frequency in
             # corpus, edit distance)
             # note q_items that are not the input string are shorter 
@@ -277,7 +275,7 @@ def get_suggestions(string, silent=False):
     outlist = sorted(as_list, key=lambda term_freq_dist: (term_freq_dist[1][1], -term_freq_dist[1][0]))
     
     if verbose==0:
-        return outlist[0]
+        return outlist[0] if outlist else string
     else:
         return outlist
 
@@ -337,20 +335,25 @@ def load(file):
 
 import time
 
-if __name__ == "__main__":
+def init():
+    global dictionary
+    start_time = time.time()
+    dictionary = create_dictionary("words3.txt")
+    run_time = time.time() - start_time
+    print('-----')
+    print(('%.2f seconds to run' % run_time))
+    print('-----')
+    save(dictionary)
 
-    print("Please wait...")
+def test():
     start_time = time.time()
     load('symmodel.npy')
-    for k in dictionary.keys()[:10]:
-        print(k)
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
     print('-----')
 
-
-    print( "Word correction")
+    print("Word correction")
     print("---------------")
 
     while True:
@@ -366,15 +369,14 @@ if __name__ == "__main__":
         print('%.5f seconds to run' % run_time)
         print('-----')
 
+if __name__ == "__main__":
+    #init()
+    test()
 
-    """print("Please wait...")
-    start_time = time.time()
-    dictionary = create_dictionary("words3.txt")
-    run_time = time.time() - start_time
-    print('-----')
-    print(('%.2f seconds to run' % run_time))
-    print('-----')
-    save(dictionary)"""
+
+
+
+
 
 
 
