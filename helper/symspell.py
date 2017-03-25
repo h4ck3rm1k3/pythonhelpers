@@ -330,7 +330,8 @@ def save(data):
     np.save('symmodel.npy', data)
 
 def load(file):
-    return np.load(file)
+    global  dictionary
+    dictionary =  np.load(file)
 ## main
 
 import time
@@ -339,7 +340,7 @@ if __name__ == "__main__":
 
     print("Please wait...")
     start_time = time.time()
-    dictionary = load('symmodel.npy')
+    load('symmodel.npy')
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
