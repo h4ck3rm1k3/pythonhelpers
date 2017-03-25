@@ -155,14 +155,15 @@ def dameraulevenshtein(seq1, seq2):
 def get_suggestions(string, silent=False):
     '''return list of suggested corrections for potentially incorrectly
        spelled word'''
-    if (len(string) - longest_word_length) > max_edit_distance:
+    """if (len(string) - longest_word_length) > max_edit_distance:
         if not silent:
             print(("no items in dictionary within maximum edit distance", string))
-        return []
+        return []"""
     
     global verbose
     suggest_dict = {}
     min_suggest_len = float('inf')
+    print("Word", string)
     
     queue = [string]
     q_dictionary = {}  # items other than string that we've checked
