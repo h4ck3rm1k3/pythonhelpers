@@ -169,9 +169,8 @@ def get_suggestions(string, silent=False):
     q_dictionary = {}  # items other than string that we've checked
     
     while len(queue)>0:
-        q_item = queue[0]  # pop
-        queue = queue[1:]
-        
+        q_item = queue.pop(0) # pop
+
         # early exit
         if ((verbose<2) and (len(suggest_dict)>0) and 
               ((len(string)-len(q_item))>min_suggest_len)):
@@ -330,7 +329,8 @@ def save(data):
 
 def load(file):
     global  dictionary
-    dictionary =  np.load(file)
+    dictionary =  np.load(file).item()
+
 ## main
 
 import time
@@ -372,7 +372,6 @@ def test():
 if __name__ == "__main__":
     #init()
     test()
-
 
 
 
