@@ -342,6 +342,8 @@ if __name__ == "__main__":
     print("Please wait...")
     start_time = time.time()
     load('symmodel.npy')
+    for k in dictionary.keys()[:10]:
+        print(k)
     run_time = time.time() - start_time
     print('-----')
     print('%.2f seconds to run' % run_time)
