@@ -155,7 +155,7 @@ def groundTruthEvent(collection,ids):
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=True)
     #print([(e['_id'], len(e['data'])) for e in gte])
 
-    if tot > 0.20*len(ids):
+    if tot > 0:
         return [gte[0]['_id']['event']]
     return []
 
