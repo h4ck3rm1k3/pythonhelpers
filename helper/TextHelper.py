@@ -19,8 +19,8 @@ t = TweetPreprocessor()
 log = helper.enableLog()
 helper.disableLog(log)
 if not symspell.dictionary:
-    #symspell.init()
-    pass
+    symspell.init()
+    #pass
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
@@ -154,7 +154,7 @@ def extract_entity_context(tweet, n=1):
 
 
 def reIndex(tweet):
-    print(tweet['id'])
+    #print(tweet['id'])
     start = tweet['end'] - len(tweet['text']) #tweet['start']
     tweet['annotations'] = sorted(tweet['annotations'], key=itemgetter('startChar'), reverse=True)
     for ann in tweet['annotations']:
