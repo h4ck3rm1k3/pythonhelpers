@@ -160,45 +160,45 @@ def get_suggestions(string, silent=False):
         if not silent:
             print(("no items in dictionary within maximum edit distance", string))
         return []"""
-    
+
     global verbose
     suggest_dict = {}
     min_suggest_len = float('inf')
 
     queue = [string]
     q_dictionary = {}  # items other than string that we've checked
-    
+
     while len(queue)>0:
         q_item = queue.pop(0) # pop
 
         # early exit
-        if ((verbose<2) and (len(suggest_dict)>0) and 
-              ((len(string)-len(q_item))>min_suggest_len)):
+        if ((verbose<2) and (len(suggest_dict)>0) and
+                ((len(string)-len(q_item))>min_suggest_len)):
             break
         # process queue item
         if (q_item in dictionary) and (q_item not in suggest_dict):
             if (dictionary[q_item][1]>0):
-            # not already in suggestion list so add to suggestion
-            # dictionary, indexed by the word with value (frequency in
-            # corpus, edit distance)
-            # note q_items that are not the input string are shorter 
-            # than input string since only deletes are added (unless 
-            # manual dictionary corrections are added)
+                # not already in suggestion list so add to suggestion
+                # dictionary, indexed by the word with value (frequency in
+                # corpus, edit distance)
+                # note q_items that are not the input string are shorter
+                # than input string since only deletes are added (unless
+                # manual dictionary corrections are added)
                 assert len(string)>=len(q_item)
-                suggest_dict[q_item] = (dictionary[q_item][1], 
+                suggest_dict[q_item] = (dictionary[q_item][1],
                                         len(string) - len(q_item))
                 # early exit
                 if ((verbose<2) and (len(string)==len(q_item))):
                     break
                 elif (len(string) - len(q_item)) < min_suggest_len:
                     min_suggest_len = len(string) - len(q_item)
-            
+
             # the suggested corrections for q_item as stored in 
             # dictionary (whether or not q_item itself is a valid word 
             # or merely a delete) can be valid corrections
             for sc_item in dictionary[q_item][0]:
                 if (sc_item not in suggest_dict):
-                    
+
                     # compute edit distance
                     # suggested items should always be longer 
                     # (unless manual corrections are added)
@@ -220,7 +220,7 @@ def get_suggestions(string, silent=False):
                     # calculate edit distance using, for example, 
                     # Damerau-Levenshtein distance
                     item_dist = dameraulevenshtein(sc_item, string)
-                    
+
                     # do not add words with greater edit distance if 
                     # verbose setting not on
                     if ((verbose<2) and (item_dist>min_suggest_len)):
@@ -230,19 +230,19 @@ def get_suggestions(string, silent=False):
                         suggest_dict[sc_item] = (dictionary[sc_item][1], item_dist)
                         if item_dist < min_suggest_len:
                             min_suggest_len = item_dist
-                    
+
                     # depending on order words are processed, some words 
                     # with different edit distances may be entered into
                     # suggestions; trim suggestion dictionary if verbose
                     # setting not on
                     if verbose<2:
                         suggest_dict = {k:v for k, v in list(suggest_dict.items()) if v[1]<=min_suggest_len}
-                
+
         # now generate deletes (e.g. a substring of string or of a delete)
         # from the queue item
         # as additional items to check -- add to end of queue
         assert len(string)>=len(q_item)
-                    
+
         # do not add words with greater edit distance if verbose setting 
         # is not on
         if ((verbose<2) and ((len(string)-len(q_item))>min_suggest_len)):
@@ -253,13 +253,13 @@ def get_suggestions(string, silent=False):
                 if word_minus_c not in q_dictionary:
                     queue.append(word_minus_c)
                     q_dictionary[word_minus_c] = None  # arbitrary value, just to identify we checked this
-                     
+
     # queue is now empty: convert suggestions in dictionary to 
     # list for output
     if not silent and verbose!=0:
         print(("number of possible corrections: %i" %len(suggest_dict)))
         print(("  edit distance for deletions: %i" % max_edit_distance))
-    
+
     # output option 1
     # sort results by ascending order of edit distance and descending 
     # order of frequency
@@ -272,12 +272,8 @@ def get_suggestions(string, silent=False):
     #                                  (frequency in corpus, edit distance)):
     as_list = list(suggest_dict.items())
     outlist = sorted(as_list, key=lambda term_freq_dist: (term_freq_dist[1][1], -term_freq_dist[1][0]))
-    
-    if verbose==0:
-        return outlist[0] if outlist else string
-    else:
-        return outlist
 
+    return outlist[0][0] if outlist else string
 
 def best_word(s, silent=False):
     try:
@@ -287,9 +283,8 @@ def best_word(s, silent=False):
 
 def correct_sentence (sentence):
     _sentence = []
-    doc_words = re.findall('[a-z]+', sentence.lower())
-    for doc_word in doc_words:
-        suggestion = best_word(doc_word, silent=True)
+    for doc_word in sentence:
+        suggestion = get_suggestions(doc_word.lower(), silent=True)
         print((doc_word, suggestion))
         _sentence.append(suggestion if suggestion else doc_word)
     return ' '.join(_sentence)

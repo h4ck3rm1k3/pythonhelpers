@@ -223,28 +223,4 @@ def replacement():
 
 
 if __name__ == '__main__':
-    tweet = {
-    "event_id" : 3,
-    "dataset" : "event 2012",
-    "event_text" : "St. Louis Cardinals win their National League Divisional Series agains the Washington Nationals.",
-    "text" : "This cardinals game is fuck #crazy #tieditup",
-    "start" : 9343,
-    "categorie_text" : "Sports",
-    "annotations" : [
-        {
-            "extractorType" : "Agent,Organisation,SportsTeam,BaseballTeam,/book/book_subject,/baseball/baseball_team,/business/employer,/sports/sports_team,/sports/professional_sports_team,/sports/sports_team_owner,/organization/organization,/award/award_nominee",
-            "idEntity" : 27361414,
-            "endChar" : 9358,
-            "confidence" : 0.100316,
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
-            "uri" : "http://en.wikipedia.org/wiki/St._Louis_Cardinals",
-            "label" : "cardinals",
-            "extractor" : "textrazor",
-            "relevance" : 0.4497,
-            "startChar" : 9349
-        }
-    ],
-    "id" : "256971370662084609",
-    "end" : 9383
-}
     parseTweets()

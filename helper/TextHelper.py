@@ -23,19 +23,20 @@ wordnet_lemmatizer = WordNetLemmatizer()
 tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
 tp = TweetPreprocessor()
 stop = stopwords.words('english') + list(string.punctuation) + ['rt', 'via', 'tweet', 'twitter', 'lol', '"', "'", "lmao"]
+default_stopwords = set(stop)
+custom_stopwords = set(codecs.open("stops.txt".format("english"), 'r', ).read().splitlines())
+all_stopwords = list(default_stopwords | custom_stopwords)
 
 porter = nltk.PorterStemmer()
 
 def isStopWord(word):
-    default_stopwords = set(stop)
-    custom_stopwords = set(codecs.open("stops.txt".format("english"), 'r', ).read().splitlines())
-    all_stopwords = list(default_stopwords | custom_stopwords)
+
     return word.lower() in all_stopwords
 
 def tokenize(text):
-    text = ' '.join(text.split())
-    text = tp.preprocess(text)
-    tokens = [token for token in tknzr.tokenize(text.lower()) if token not in stop and len(token) > 2]
+    text = text.replace('._', '__')
+    text = t.preprocess(text)
+    tokens = [token.replace('__', '._') for token in tknzr.tokenize(text.lower()) if token not in all_stopwords]
     return tokens
 
 def isInWordNet(word):
@@ -106,17 +107,17 @@ def buildTfIdf(docs):
     return  doc
 
 def extract_entity_context(tweet, n=1):
-    text = t.preprocess(tweet['text'])
-    text = tokenize(text)
+    text = tweet['text']
+
     mDicts = []
     if(tweet['annotations']):
-        text = ' '.join(text)
+        #text = ' '.join(text)
+        #text = symspell.correct_sentence(text)
         newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
         index = 0
-
+        ents = []
         for ann in newlist:
-
-            ann['label'] = t.preprocess(ann['label']).lower()
+            #ann['label'] = t.preprocess(ann['label']).lower()
             if ann['relevance'] < 0.1 or not ann['extractorType']:
                 continue
             uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
@@ -133,19 +134,26 @@ def extract_entity_context(tweet, n=1):
             if start >= 0:
                 text = text.replace(ann['label'], label)
                 end = start + len(label) #ann['endChar'] - ann['startChar']
-                mDict ['label'] = label
+                mDict ['label'] = label.lower()
                 mDict['type'] = ann['extractorType'].lower()
                 mDict['start'] = start
                 mDict['end'] = end
+                ents.append(ann['label'].lower())
             if mDict:
                 mDicts.append(mDict)
             index = end
 
-        ents = []
+
+        text = tokenize(text)
+        text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
 
         for a in mDicts:
-            ents.append(a['label'])
-            a['edges'] =  [(' '.join(text[0:a['start']].split()[-n:]), a['label'],1),(a['label'], ' '.join(text[a['end']:].split()[0:n]),0)]
+            index = text.index(a['label'])
+            a['edges'] = []
+            if index > 0 :
+                a['edges'].append((text[index-1], a['label'], 1))
+            if index < len(text)-1:
+                a['edges'].append((a['label'], text[index + 1], 0))
 
         gg = ngrams(ents,2)
         for g in gg:
@@ -155,7 +163,39 @@ def extract_entity_context(tweet, n=1):
 
 
 if __name__ == '__main__':
-    data = {'test': "hello", "test1":"world"}
-    save(data)
-    data2 = load('temp.npy')
-    print(data2)
+    tweet = {
+    "event_id" : -1,
+    "dataset" : "event 2012",
+    "text" : "My school think they so damn better than everybody else, and don't even have BET where I can watch the Hip Hop Awards",
+    "start" : 10953,
+    "annotations" : [
+        {
+            "idEntity" : 26684876,
+            "extractorType" : "Agent,Organisation,Broadcaster,TelevisionStation,/award/award_winner,/organization/organization,/tv/tv_network,/award/award_presenting_organization,/business/employer,/business/customer,/film/film_distributor,/tv/tv_program_creator,/award/award_nominee,/business/business_operation",
+            "relevance" : 0.3307,
+            "endChar" : 11033,
+            "uri" : "http://en.wikipedia.org/wiki/BET",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
+            "label" : "BET",
+            "extractor" : "textrazor",
+            "confidence" : 0.953263,
+            "startChar" : 11030
+        },
+        {
+            "idEntity" : 26684878,
+            "extractorType" : "MusicGenre,TopicalConcept,Genre,/broadcast/genre,/film/film_subject,/book/book_subject,/business/industry,/music/genre,/radio/radio_subject,/tv/tv_subject,/media_common/media_genre,/broadcast/radio_format,/music/music_video_genre,/broadcast/content,/theater/theater_genre,/award/award_discipline",
+            "relevance" : 0.4629,
+            "endChar" : 11063,
+            "uri" : "http://en.wikipedia.org/wiki/Hip_hop_music",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "label" : "Hip Hop",
+            "extractor" : "textrazor",
+            "confidence" : 8.53158,
+            "startChar" : 11056
+        }
+    ],
+    "id" : "255820017243942913",
+    "end" : 11073
+}
+
+    print(extract_entity_context(tweet))
