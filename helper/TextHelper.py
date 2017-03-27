@@ -147,6 +147,9 @@ def extract_entity_context(tweet, n=1):
         text = tokenize(text)
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
 
+        print(text)
+        print(mDicts)
+
         for a in mDicts:
             index = text.index(a['label'])
             a['edges'] = []
