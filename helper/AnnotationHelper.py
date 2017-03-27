@@ -17,11 +17,13 @@ def nerdIt(params,tt):
         cleanAnnotation(t)
         #print(t)
     print("Annotated", len(params))
-    db.insert("annotation_unsupervised", params)
+    db.connect('tweets_dataset')
+    db.insert("all_tweets", params)
+    db.connect('event_2012')
 
 def parseTweets():
     db.connect("event_2012")
-    limit, skip, index = 400, 1000400, 0
+    limit, skip, index = 400, 1233200, 0
     separator = "==="
 
     while True:
