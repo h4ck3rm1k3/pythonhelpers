@@ -19,8 +19,8 @@ t = TweetPreprocessor()
 log = helper.enableLog()
 helper.disableLog(log)
 if not symspell.dictionary:
-    symspell.init()
-    #pass
+    #symspell.init()
+    pass
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
