@@ -15,8 +15,8 @@ from nltk import ngrams
 
 t = TweetPreprocessor()
 
-"""if not symspell.dictionary:
-    symspell.create_dictionary_from_wordnet()"""
+if not symspell.dictionary:
+    symspell.create_dictionary_from_wordnet()
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
@@ -109,6 +109,8 @@ def buildTfIdf(docs):
 def extract_entity_context(tweet, n=1):
     text = tweet['text']
 
+    print(tweet)
+
     mDicts = []
     if(tweet['annotations']):
         #text = ' '.join(text)
@@ -143,6 +145,7 @@ def extract_entity_context(tweet, n=1):
                 mDicts.append(mDict)
             index = end
 
+        print(text)
 
         text = tokenize(text)
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
