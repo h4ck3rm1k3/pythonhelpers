@@ -16,7 +16,8 @@ from nltk import ngrams
 t = TweetPreprocessor()
 
 if not symspell.dictionary:
-    symspell.create_dictionary_from_wordnet()
+    #symspell.init()
+    pass
 
 wordnet_lemmatizer = WordNetLemmatizer()
 

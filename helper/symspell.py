@@ -303,12 +303,17 @@ import time
 def init():
     global dictionary
     start_time = time.time()
-    dictionary = create_dictionary("words3.txt")
+    import os
+    if not os.path.isfile('symmodel.npy'):
+        dictionary = create_dictionary("words3.txt")
+        save(dictionary)
+    else:
+        load('symmodel.npy')
     run_time = time.time() - start_time
     print('-----')
     print(('%.2f seconds to run' % run_time))
     print('-----')
-    save(dictionary)
+
 
 def test():
     start_time = time.time()
