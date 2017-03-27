@@ -16,8 +16,8 @@ from nltk import ngrams
 t = TweetPreprocessor()
 
 if not symspell.dictionary:
-    #symspell.init()
-    pass
+    symspell.init()
+    #pass
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
@@ -110,8 +110,6 @@ def buildTfIdf(docs):
 def extract_entity_context(tweet, n=1):
     text = tweet['text']
 
-    print(tweet)
-
     mDicts = []
     if(tweet['annotations']):
         #text = ' '.join(text)
@@ -135,24 +133,17 @@ def extract_entity_context(tweet, n=1):
                 start = -1
             end = index
             if start >= 0:
-                text = text.replace(ann['label'], label)
+                text = text.replace(ann['label'], label+" ")
                 end = start + len(label) #ann['endChar'] - ann['startChar']
                 mDict ['label'] = label.lower()
                 mDict['type'] = ann['extractorType'].lower()
-                mDict['start'] = start
-                mDict['end'] = end
-                ents.append(ann['label'].lower())
+                ents.append(label.lower())
             if mDict:
                 mDicts.append(mDict)
             index = end
 
-        print(text)
-
         text = tokenize(text)
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
-
-        print(text)
-        print(mDicts)
 
         for a in mDicts:
             index = text.index(a['label'])
@@ -170,39 +161,7 @@ def extract_entity_context(tweet, n=1):
 
 
 if __name__ == '__main__':
-    tweet = {
-    "event_id" : -1,
-    "dataset" : "event 2012",
-    "text" : "My school think they so damn better than everybody else, and don't even have BET where I can watch the Hip Hop Awards",
-    "start" : 10953,
-    "annotations" : [
-        {
-            "idEntity" : 26684876,
-            "extractorType" : "Agent,Organisation,Broadcaster,TelevisionStation,/award/award_winner,/organization/organization,/tv/tv_network,/award/award_presenting_organization,/business/employer,/business/customer,/film/film_distributor,/tv/tv_program_creator,/award/award_nominee,/business/business_operation",
-            "relevance" : 0.3307,
-            "endChar" : 11033,
-            "uri" : "http://en.wikipedia.org/wiki/BET",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
-            "label" : "BET",
-            "extractor" : "textrazor",
-            "confidence" : 0.953263,
-            "startChar" : 11030
-        },
-        {
-            "idEntity" : 26684878,
-            "extractorType" : "MusicGenre,TopicalConcept,Genre,/broadcast/genre,/film/film_subject,/book/book_subject,/business/industry,/music/genre,/radio/radio_subject,/tv/tv_subject,/media_common/media_genre,/broadcast/radio_format,/music/music_video_genre,/broadcast/content,/theater/theater_genre,/award/award_discipline",
-            "relevance" : 0.4629,
-            "endChar" : 11063,
-            "uri" : "http://en.wikipedia.org/wiki/Hip_hop_music",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
-            "label" : "Hip Hop",
-            "extractor" : "textrazor",
-            "confidence" : 8.53158,
-            "startChar" : 11056
-        }
-    ],
-    "id" : "255820017243942913",
-    "end" : 11073
-}
+    tweet = {'categorie_text': 'Arts, Culture & Entertainment', 'id': '255821816554205184', 'text': '2012 B.E.T hiphop awards tho&lt;&lt;&lt;&lt;&lt;&lt;', 'start': 1578, 'end': 1633, 'dataset': 'event 2012', 'event_text': 'They are discussing a televised award show for the BET network.', 'event_id': 394, 'annotations': [{'startChar': 1584, 'relevance': 0.1492, 'label': 'B.E.', 'uri': 'http://en.wikipedia.org/wiki/Beryllium', 'extractor': 'textrazor', 'nerdType': 'http://nerd.eurecom.fr/ontology#Thing', 'idEntity': 27344500, 'endChar': 1588, 'extractorType': '/engineering/material,/chemistry/chemical_element,/medicine/drug_ingredient', 'confidence': 0.138316}, {'startChar': 1590, 'relevance': 0.5057, 'label': 'hiphop', 'uri': 'http://en.wikipedia.org/wiki/Hip_hop_music', 'extractor': 'textrazor', 'nerdType': 'http://nerd.eurecom.fr/ontology#Thing', 'idEntity': 27344501, 'endChar': 1596, 'extractorType': 'TopicalConcept,Genre,MusicGenre,/broadcast/genre,/film/film_subject,/book/book_subject,/business/industry,/music/genre,/radio/radio_subject,/tv/tv_subject,/media_common/media_genre,/broadcast/radio_format,/music/music_video_genre,/broadcast/content,/theater/theater_genre,/award/award_discipline', 'confidence': 2.81789}]}
+
 
     print(extract_entity_context(tweet))
