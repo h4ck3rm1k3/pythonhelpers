@@ -3,6 +3,7 @@ from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 import nltk
 import string
+import helper
 import numpy as np
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
@@ -12,12 +13,14 @@ from helper.TweetPreprocessor import TweetPreprocessor
 from helper import symspell
 from operator import itemgetter
 from nltk import ngrams
-
+import re
 t = TweetPreprocessor()
 
+log = helper.enableLog()
+helper.disableLog(log)
 if not symspell.dictionary:
-    symspell.init()
-    #pass
+    #symspell.init()
+    pass
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
@@ -34,10 +37,10 @@ def isStopWord(word):
 
     return word.lower() in all_stopwords
 
-def tokenize(text):
-    text = text.replace('._', '__')
+def tokenize(text, excerpt=[]):
     text = t.preprocess(text)
-    tokens = [token.replace('__', '._') for token in tknzr.tokenize(text.lower()) if token not in all_stopwords]
+    #tokens = [token for token in tknzr.tokenize(text.lower()) if token in excerpt or token not in all_stopwords]
+    tokens = [token for token in text.split() if token in excerpt or token not in all_stopwords]
     return tokens
 
 def isInWordNet(word):
@@ -85,6 +88,7 @@ class MySentences(object):
 
 def tokenizer(text):
     text = text.lower()
+
     tokens = text.split(sep="=>")
     return [t for t in tokens if len(t) > 1]
 
@@ -108,17 +112,12 @@ def buildTfIdf(docs):
     return  doc
 
 def extract_entity_context(tweet, n=1):
+    tweet = reIndex(tweet)
     text = tweet['text']
-
     mDicts = []
     if(tweet['annotations']):
-        #text = ' '.join(text)
-        #text = symspell.correct_sentence(text)
-        newlist = sorted(tweet['annotations'], key=itemgetter('startChar'))
-        index = 0
         ents = []
-        for ann in newlist:
-            #ann['label'] = t.preprocess(ann['label']).lower()
+        for ann in tweet['annotations']:
             if ann['relevance'] < 0.1 or not ann['extractorType']:
                 continue
             uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
@@ -126,32 +125,26 @@ def extract_entity_context(tweet, n=1):
             if '(' in label:
                 labels = label.split("_(")[:-1]
                 label = '_('.join(labels)
-            mDict = {}
-            try:
-                start =  text.index(ann['label'], index) if ann['label'] in text else -1
-            except:
-                start = -1
-            end = index
-            if start >= 0:
-                text = text.replace(ann['label'], label+" ")
-                end = start + len(label) #ann['endChar'] - ann['startChar']
-                mDict ['label'] = label.lower()
-                mDict['type'] = ann['extractorType'].lower()
-                ents.append(label.lower())
-            if mDict:
-                mDicts.append(mDict)
-            index = end
+            regex = re.compile('[,\.!?]')  # etc.
+            label = regex.sub('', label).lower()
+            text = text[0:ann['startChar']] + " " + label +" " + text[ann['endChar']+1:]
+            mDict = {'label': label.lower(), 'type':ann['extractorType'].lower()}
+            ents.append(label.lower())
+            mDicts.append(mDict)
 
-        text = tokenize(text)
+
+        text = tokenize(text, excerpt=ents)
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
-
         for a in mDicts:
-            index = text.index(a['label'])
-            a['edges'] = []
-            if index > 0 :
-                a['edges'].append((text[index-1], a['label'], 1))
-            if index < len(text)-1:
-                a['edges'].append((a['label'], text[index + 1], 0))
+            try:
+                index = text.index(a['label'])
+                a['edges'] = []
+                if index > 0 :
+                    a['edges'].append((text[index-1], a['label'], 1))
+                if index < len(text)-1:
+                    a['edges'].append((a['label'], text[index + 1], 0))
+            except:
+                return []
 
         gg = ngrams(ents,2)
         for g in gg:
@@ -160,8 +153,101 @@ def extract_entity_context(tweet, n=1):
     return mDicts
 
 
-if __name__ == '__main__':
-    tweet = {'categorie_text': 'Arts, Culture & Entertainment', 'id': '255821816554205184', 'text': '2012 B.E.T hiphop awards tho&lt;&lt;&lt;&lt;&lt;&lt;', 'start': 1578, 'end': 1633, 'dataset': 'event 2012', 'event_text': 'They are discussing a televised award show for the BET network.', 'event_id': 394, 'annotations': [{'startChar': 1584, 'relevance': 0.1492, 'label': 'B.E.', 'uri': 'http://en.wikipedia.org/wiki/Beryllium', 'extractor': 'textrazor', 'nerdType': 'http://nerd.eurecom.fr/ontology#Thing', 'idEntity': 27344500, 'endChar': 1588, 'extractorType': '/engineering/material,/chemistry/chemical_element,/medicine/drug_ingredient', 'confidence': 0.138316}, {'startChar': 1590, 'relevance': 0.5057, 'label': 'hiphop', 'uri': 'http://en.wikipedia.org/wiki/Hip_hop_music', 'extractor': 'textrazor', 'nerdType': 'http://nerd.eurecom.fr/ontology#Thing', 'idEntity': 27344501, 'endChar': 1596, 'extractorType': 'TopicalConcept,Genre,MusicGenre,/broadcast/genre,/film/film_subject,/book/book_subject,/business/industry,/music/genre,/radio/radio_subject,/tv/tv_subject,/media_common/media_genre,/broadcast/radio_format,/music/music_video_genre,/broadcast/content,/theater/theater_genre,/award/award_discipline', 'confidence': 2.81789}]}
+def reIndex(tweet):
+    print(tweet['id'])
+    start = tweet['end'] - len(tweet['text']) #tweet['start']
+    tweet['annotations'] = sorted(tweet['annotations'], key=itemgetter('startChar'), reverse=True)
+    for ann in tweet['annotations']:
+        try:
+            ann['startChar'] = ann['startChar'] - start
+            ann['endChar'] = ann['startChar'] + len(ann['label'])
+            indexes = [m.start() for m in re.finditer(ann['label'].lower(), tweet['text'].lower())]
+            current, small = -1, 0
+            if not indexes:
+                ann['relevance'] = 0
+            for index in indexes:
+                if ann['startChar'] - index < small or small == 0:
+                    small = ann['startChar'] - index
+                    current = index
+            ann['startChar'] = current
+            ann['endChar'] = ann['startChar'] + len(ann['label'])
+        except:
+            ann['relevance'] = 0
+    tweet['annotations'] = sorted(tweet['annotations'], key=itemgetter('startChar'), reverse=True)
+    tweet['start'] = 0
 
+    return tweet
+
+if __name__ == '__main__':
+    tweet ={
+    "start" : 15049,
+    "text" : "IFollowBack ClassicMap app brings back Google Maps to Apple iOS 6 -- kind of - Los Angeles… ",
+    "end" : 15144,
+    "annotations" : [
+        {
+            "extractor" : "textrazor",
+            "idEntity" : 26684293,
+            "relevance" : 0.3286,
+            "confidence" : 0.396842,
+            "startChar" : 15072,
+            "extractorType" : "/business/industry,/business/competitive_space,/organization/organization_sector,/computer/operating_system,/computer/software_genre,/cvg/cvg_genre,/book/book_subject,/internet/website_category,/business/consumer_product,/media_common/media_genre",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "label" : "app",
+            "endChar" : 15075,
+            "uri" : "http://en.wikipedia.org/wiki/Mobile_app"
+        },
+        {
+            "extractor" : "textrazor",
+            "idEntity" : 26684295,
+            "relevance" : 0.3728,
+            "confidence" : 0.605474,
+            "startChar" : 15088,
+            "extractorType" : "Work,Agent,Website,Organisation,Company,/projects/project_focus,/book/book_subject,/business/brand,/internet/website",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
+            "label" : "Google Maps",
+            "endChar" : 15099,
+            "uri" : "http://en.wikipedia.org/wiki/Google_Maps"
+        },
+        {
+            "extractor" : "textrazor",
+            "idEntity" : 26684298,
+            "relevance" : 0.0,
+            "confidence" : 0.0,
+            "startChar" : 15128,
+            "extractorType" : "Company,/organization/organization",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
+            "label" : "Los Angeles…",
+            "endChar" : 15140,
+            "uri" : ""
+        },
+        {
+            "extractor" : "textrazor",
+            "idEntity" : 26684299,
+            "relevance" : 0.463,
+            "confidence" : 0.190316,
+            "startChar" : 15109,
+            "extractorType" : "Work,Software,/computer/operating_system",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "label" : "iOS 6",
+            "endChar" : 15114,
+            "uri" : "http://en.wikipedia.org/wiki/IOS_6"
+        },
+        {
+            "extractor" : "textrazor",
+            "idEntity" : 26684300,
+            "relevance" : 0.406,
+            "confidence" : 0.832842,
+            "startChar" : 15103,
+            "extractorType" : "Work,Software,/computer/software,/cvg/cvg_platform,/computer/operating_system",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "label" : "Apple iOS",
+            "endChar" : 15112,
+            "uri" : "http://en.wikipedia.org/wiki/IOS"
+        }
+    ],
+    "id" : "255819983924375553",
+    "dataset" : "event 2012",
+    "event_id" : -1
+}
 
     print(extract_entity_context(tweet))
