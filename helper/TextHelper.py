@@ -29,7 +29,7 @@ tp = TweetPreprocessor()
 stop = stopwords.words('english') + list(string.punctuation) + ['rt', 'via', 'tweet', 'twitter', 'lol', '"', "'", "lmao"]
 default_stopwords = set(stop)
 custom_stopwords = set(codecs.open("stops.txt".format("english"), 'r', ).read().splitlines())
-all_stopwords = list(default_stopwords | custom_stopwords)
+all_stopwords = list(default_stopwords) #list(default_stopwords | custom_stopwords)
 
 porter = nltk.PorterStemmer()
 
@@ -40,7 +40,7 @@ def isStopWord(word):
 def tokenize(text, excerpt=[]):
     text = t.preprocess(text)
     #tokens = [token for token in tknzr.tokenize(text.lower()) if token in excerpt or token not in all_stopwords]
-    tokens = [token for token in text.split() if token in excerpt or token not in all_stopwords]
+    tokens = [token for token in text.split() if token in excerpt or (token not in all_stopwords and len(token) > 3)]
     return tokens
 
 def isInWordNet(word):
@@ -118,7 +118,7 @@ def extract_entity_context(tweet, n=1):
     if(tweet['annotations']):
         ents = []
         for ann in tweet['annotations']:
-            if ann['relevance'] < 0.1 or not ann['extractorType']:
+            if ann['relevance'] < 0.2 or not ann['extractorType']:
                 continue
             uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
             label = uris[len(uris)-1]

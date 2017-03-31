@@ -189,7 +189,7 @@ def intervales(collection, param="hour", interval=2):
             "data": {"$addToSet": '$id'}
         }
         },
-        #{"$sort": {"_id.day": 1, "_id.cinterval": 1}}
+        {'$match': {'_id.intervalday': {'$gte': 284}}}
     ]
 
     sort = OrderedDict()

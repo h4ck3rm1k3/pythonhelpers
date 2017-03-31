@@ -17,9 +17,9 @@ def nerdIt(params,tt):
         cleanAnnotation(t)
         #print(t)
     print("Annotated", len(params))
-    db.connect('tweets_dataset')
-    db.insert("all_tweets", params)
-    db.connect('event_2012')
+    #db.connect('tweets_dataset')
+    #db.insert("all_tweets", params)
+    #db.connect('event_2012')
 
 def parseTweets():
     db.connect("event_2012")
