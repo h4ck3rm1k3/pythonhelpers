@@ -140,7 +140,7 @@ def extract_entity_context(tweet, n=1):
 
         if stops(text) > 3 and len(ents) < 2:
             return []
-        text = tokenize(text, excerpt=ents)
+        text = tokenize(text, excerpt=ents) #test
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
         for a in mDicts:
             try:
