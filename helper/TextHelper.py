@@ -26,10 +26,10 @@ wordnet_lemmatizer = WordNetLemmatizer()
 
 tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
 tp = TweetPreprocessor()
-stop = stopwords.words('english') + list(string.punctuation) + ['rt', 'via', 'tweet', 'twitter', 'lol', '"', "'", "lmao"]
+stop = stopwords.words('english') + list(string.punctuation)
 default_stopwords = set(stop)
-custom_stopwords = set(codecs.open("stops.txt".format("english"), 'r', ).read().splitlines())
-all_stopwords = list(default_stopwords) #list(default_stopwords | custom_stopwords)
+custom_stopwords = set(codecs.open("slang.txt".format("english"), 'r', ).read().splitlines())
+all_stopwords = list(default_stopwords | custom_stopwords)
 
 porter = nltk.PorterStemmer()
 
@@ -40,7 +40,7 @@ def isStopWord(word):
 def tokenize(text, excerpt=[]):
     text = t.preprocess(text)
     #tokens = [token for token in tknzr.tokenize(text.lower()) if token in excerpt or token not in all_stopwords]
-    tokens = [token for token in text.split() if token in excerpt or (token not in all_stopwords and len(token) > 3)]
+    tokens = [token for token in text.split() if (len(token) > 3 or token in excerpt ) and (token not in all_stopwords)]
     return tokens
 
 def isInWordNet(word):
@@ -66,6 +66,8 @@ def similarity(w1, w2, sim=wn.path_similarity):
   else:
     return max(sim_scores)
 
+def stops(text):
+    return len(set(text.split()).intersection(set(all_stopwords)))
 
 def lemmatize(word):
     word = word.lower()
@@ -114,6 +116,7 @@ def buildTfIdf(docs):
 def extract_entity_context(tweet, n=1):
     tweet = reIndex(tweet)
     text = tweet['text']
+
     mDicts = []
     if(tweet['annotations']):
         ents = []
@@ -121,18 +124,22 @@ def extract_entity_context(tweet, n=1):
             if ann['relevance'] < 0.2 or not ann['extractorType']:
                 continue
             uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
+            if len(uris) < 3:
+                continue
             label = uris[len(uris)-1]
             if '(' in label:
                 labels = label.split("_(")[:-1]
                 label = '_('.join(labels)
             regex = re.compile('[,\.!?]')  # etc.
             label = regex.sub('', label).lower()
-            text = text[0:ann['startChar']] + " " + label +" " + text[ann['endChar']+1:]
-            mDict = {'label': label.lower(), 'type':ann['extractorType'].lower()}
-            ents.append(label.lower())
-            mDicts.append(mDict)
+            if len(label) > 3:
+                text = text[0:ann['startChar']] + " " + label +" " + text[ann['endChar']+1:]
+                mDict = {'label': label.lower(), 'type':ann['extractorType'].lower()}
+                ents.append(label.lower())
+                mDicts.append(mDict)
 
-
+        if stops(text) > 3 and len(ents) < 2:
+            return []
         text = tokenize(text, excerpt=ents)
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
         for a in mDicts:
@@ -179,7 +186,11 @@ def reIndex(tweet):
     return tweet
 
 if __name__ == '__main__':
-    tweet ={
+
+
+    print(tokenize("go helll fuck this shiet damn it lmfao loll "))
+
+    """tweet ={
     "start" : 15049,
     "text" : "IFollowBack ClassicMap app brings back Google Maps to Apple iOS 6 -- kind of - Los Angeles… ",
     "end" : 15144,
@@ -250,4 +261,4 @@ if __name__ == '__main__':
     "event_id" : -1
 }
 
-    print(extract_entity_context(tweet))
+    print(extract_entity_context(tweet))"""
