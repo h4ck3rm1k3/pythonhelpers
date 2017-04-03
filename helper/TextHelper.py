@@ -117,9 +117,8 @@ def extract_entity_context(tweet, n=1):
     tweet = reIndex(tweet)
     text = tweet['text']
 
-    if len(slangs(text)) >= 1 :
+    if slangs(text) >= 1 :
         return []
-
 
 
     mDicts = []
