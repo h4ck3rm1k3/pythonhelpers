@@ -66,8 +66,8 @@ def similarity(w1, w2, sim=wn.path_similarity):
   else:
     return max(sim_scores)
 
-def stops(text):
-    return len(set(text.split()).intersection(set(all_stopwords)))
+def slangs(text):
+    return len(set(text.split()).intersection(custom_stopwords))
 
 def lemmatize(word):
     word = word.lower()
@@ -117,6 +117,11 @@ def extract_entity_context(tweet, n=1):
     tweet = reIndex(tweet)
     text = tweet['text']
 
+    if len(slangs(text)) >= 1 :
+        return []
+
+
+
     mDicts = []
     if(tweet['annotations']):
         ents = []
@@ -138,8 +143,8 @@ def extract_entity_context(tweet, n=1):
                 ents.append(label.lower())
                 mDicts.append(mDict)
 
-        if stops(text) > 3 and len(ents) < 2:
-            return []
+        """if stops(text) > 3 and len(ents) < 2:
+            return []"""
         text = tokenize(text, excerpt=ents) #test
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
         for a in mDicts:
