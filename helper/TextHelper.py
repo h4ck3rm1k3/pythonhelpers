@@ -16,8 +16,8 @@ from nltk import ngrams
 import re
 t = TweetPreprocessor()
 
-log = helper.enableLog()
-helper.disableLog(log)
+#log = helper.enableLog()
+#helper.disableLog(log)
 if not symspell.dictionary:
     #symspell.init()
     pass
@@ -117,18 +117,18 @@ def extract_entity_context(tweet, n=1):
     tweet = reIndex(tweet)
     text = tweet['text']
 
-    if slangs(text) >= 1 :
-        return []
+    """if slangs(text) >= 1 :
+        return []"""
 
 
     mDicts = []
     if(tweet['annotations']):
         ents = []
         for ann in tweet['annotations']:
-            if ann['relevance'] < 0.2 or not ann['extractorType']:
+            if not ann['extractorType']:
                 continue
             uris = str(ann['uri'] if ann['uri'] else ann['label']).split(sep="/")
-            if len(uris) < 3:
+            if len(ann['extractorType'].split(sep="/")) < 2:
                 continue
             label = uris[len(uris)-1]
             if '(' in label:
@@ -136,7 +136,7 @@ def extract_entity_context(tweet, n=1):
                 label = '_('.join(labels)
             regex = re.compile('[,\.!?]')  # etc.
             label = regex.sub('', label).lower()
-            if len(label) > 3:
+            if len(label) >= 3:
                 text = text[0:ann['startChar']] + " " + label +" " + text[ann['endChar']+1:]
                 mDict = {'label': label.lower(), 'type':ann['extractorType'].lower()}
                 ents.append(label.lower())
@@ -146,7 +146,10 @@ def extract_entity_context(tweet, n=1):
             return []"""
         text = tokenize(text, excerpt=ents) #test
         text = [t if t in ents else symspell.get_suggestions(t, silent=True) for t in text]
+        current = -1
+        toRem = []
         for a in mDicts:
+            current +=1
             try:
                 index = text.index(a['label'])
                 a['edges'] = []
@@ -154,8 +157,14 @@ def extract_entity_context(tweet, n=1):
                     a['edges'].append((text[index-1], a['label'], 1))
                 if index < len(text)-1:
                     a['edges'].append((a['label'], text[index + 1], 0))
-            except:
-                return []
+            except Exception as e:
+                #print(str(e))
+                toRem.append(a)
+                #return []
+
+        for rem in toRem:
+            mDicts.remove(rem)
+            ents.remove(rem['label'])
 
         gg = ngrams(ents,2)
         for g in gg:
@@ -191,78 +200,53 @@ def reIndex(tweet):
 
 if __name__ == '__main__':
 
-
-    print(tokenize("go helll fuck this shiet damn it lmfao loll "))
-
-    """tweet ={
-    "start" : 15049,
-    "text" : "IFollowBack ClassicMap app brings back Google Maps to Apple iOS 6 -- kind of - Los Angeles… ",
-    "end" : 15144,
+    tweet =  {
+    "event_id" : 394,
+    "dataset" : "event 2012",
+    "text" : "My phone seriously sucks asshole.",
+    "id" : "255830037687832576",
+    "event_text" : "They are discussing a televised award show for the BET network.",
+    "end" : 9986,
+    "start" : 9950,
+    "categorie_text" : "Arts, Culture & Entertainment",
     "annotations" : [
         {
             "extractor" : "textrazor",
-            "idEntity" : 26684293,
-            "relevance" : 0.3286,
-            "confidence" : 0.396842,
-            "startChar" : 15072,
-            "extractorType" : "/business/industry,/business/competitive_space,/organization/organization_sector,/computer/operating_system,/computer/software_genre,/cvg/cvg_genre,/book/book_subject,/internet/website_category,/business/consumer_product,/media_common/media_genre",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
-            "label" : "app",
-            "endChar" : 15075,
-            "uri" : "http://en.wikipedia.org/wiki/Mobile_app"
-        },
-        {
-            "extractor" : "textrazor",
-            "idEntity" : 26684295,
-            "relevance" : 0.3728,
-            "confidence" : 0.605474,
-            "startChar" : 15088,
-            "extractorType" : "Work,Agent,Website,Organisation,Company,/projects/project_focus,/book/book_subject,/business/brand,/internet/website",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
-            "label" : "Google Maps",
-            "endChar" : 15099,
-            "uri" : "http://en.wikipedia.org/wiki/Google_Maps"
-        },
-        {
-            "extractor" : "textrazor",
-            "idEntity" : 26684298,
-            "relevance" : 0.0,
+            "label" : "2",
+            "startChar" : 9967,
             "confidence" : 0.0,
-            "startChar" : 15128,
-            "extractorType" : "Company,/organization/organization",
+            "endChar" : 9968,
+            "idEntity" : 27344790,
+            "relevance" : 0.0,
+            "uri" : "",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "extractorType" : "Number"
+        },
+        {
+            "extractor" : "textrazor",
+            "label" : "hrs",
+            "startChar" : 9969,
+            "confidence" : 0.427158,
+            "endChar" : 9972,
+            "idEntity" : 27344791,
+            "relevance" : 0.1995,
+            "uri" : "http://en.wikipedia.org/wiki/Home_run",
+            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
+            "extractorType" : "null"
+        },
+        {
+            "extractor" : "textrazor",
+            "label" : "===My",
+            "startChar" : 9978,
+            "confidence" : 0.0,
+            "endChar" : 9983,
+            "idEntity" : 27344792,
+            "relevance" : 0.0,
+            "uri" : "",
             "nerdType" : "http://nerd.eurecom.fr/ontology#Organization",
-            "label" : "Los Angeles…",
-            "endChar" : 15140,
-            "uri" : ""
-        },
-        {
-            "extractor" : "textrazor",
-            "idEntity" : 26684299,
-            "relevance" : 0.463,
-            "confidence" : 0.190316,
-            "startChar" : 15109,
-            "extractorType" : "Work,Software,/computer/operating_system",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
-            "label" : "iOS 6",
-            "endChar" : 15114,
-            "uri" : "http://en.wikipedia.org/wiki/IOS_6"
-        },
-        {
-            "extractor" : "textrazor",
-            "idEntity" : 26684300,
-            "relevance" : 0.406,
-            "confidence" : 0.832842,
-            "startChar" : 15103,
-            "extractorType" : "Work,Software,/computer/software,/cvg/cvg_platform,/computer/operating_system",
-            "nerdType" : "http://nerd.eurecom.fr/ontology#Thing",
-            "label" : "Apple iOS",
-            "endChar" : 15112,
-            "uri" : "http://en.wikipedia.org/wiki/IOS"
+            "extractorType" : "Company,/organization/organization"
         }
-    ],
-    "id" : "255819983924375553",
-    "dataset" : "event 2012",
-    "event_id" : -1
+    ]
 }
 
-    print(extract_entity_context(tweet))"""
+    print(extract_entity_context(tweet))

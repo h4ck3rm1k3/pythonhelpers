@@ -153,10 +153,10 @@ def groundTruthEvent(collection,ids):
     gte = db.getEventCategory(collection, ids)
     tot = sum(len(d['data']) for d in gte)
     gte = sorted(gte, key=lambda k: len(k['data']), reverse=True)
-    #print([(e['_id'], len(e['data'])) for e in gte])
+    print([(e['_id'], len(e['data'])) for e in gte])
 
     if tot > 0:
-        return [gte[0]['_id']['event']]
+        return [{'id':gt['_id']['event'],'tweets': gt['data']} for gt in gte if len(gt['data']) >=5]
     return []
 
 def replacement():
